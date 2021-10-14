@@ -39,7 +39,7 @@ class pycgm():
 
         return np.array([tuple(list(frame.values())) for frame in marker_frames], dtype=marker_row_dtype)
 
-    def calc_axis_pelvis(self,rasi, lasi, rpsi, lpsi, sacr=None):
+    def calc_axis_pelvis(self,rasi, lasi, rpsi, lpsi, sacr):
         if sacr is None:
             sacr = (rpsi + lpsi) / 2.0
 
@@ -72,13 +72,9 @@ class pycgm():
 
 
     def JointAngleCalc(self, frame):
-        # print(frame['sgfh'])
-        rasi = frame.keys()
-        pelvis_axis = self.calc_axis_pelvis(frame['RASI'] if 'RASI' in frame else None,
-                                       frame['LASI'] if 'LASI' in frame else None,
-                                       frame['RPSI'] if 'RPSI' in frame else None,
-                                       frame['LPSI'] if 'LPSI' in frame else None,
-                                       frame['SACR'] if 'SACR' in frame else None)
+        st = frame.get('PAPA')
+        pelvis_axis = self.calc_axis_pelvis(frame.get('RASI'),frame.get('LASI'),
+                                        frame.get('RPSI'),frame.get('LPSI'),frame.get('SACR'))
         RightKneeWidth = self.vsk['RightKneeWidth']
         # print(RightKneeWidth)
         return pelvis_axis

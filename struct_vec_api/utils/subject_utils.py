@@ -8,12 +8,25 @@ def structure_subject(static_trial_filename, dynamic_trials, measurement_filenam
     '''
     Create a structured array containing a subject's data
 
-    Takes in a single static filename, one or more dynamic trial filenames,
-    and a measurement filename
+    Parameters
+    ----------
+    static_trial_filename: str
+        Filename of the static trial .c3d
 
-    Returns a structured array containing the subject's
-    measurements, static trial, and dynamic trial(s)
+    dynamic_trials: str or list of str
+        Filename or list of filenames of dynamic trial .c3d(s)
 
+    measurement_filename: str
+        Filename of the subject measurement .vsk
+
+    Returns
+    -------
+    subject: structured array
+        structured array containing the subject's measurements, static trial,
+        and dynamic trial(s)
+
+    Notes
+    -----
     Accessing measurement data:
         subject.static.measurements.{measurement name}
         e.g. subject.static.measurements.LeftLegLength
@@ -206,6 +219,6 @@ def add_dynamic_marker(subject, dynamic_trial_name, marker_name, marker_data):
     TODO consider whether or not marker_data already has frame numbers, add if not
     """ 
     with_added_marker = add_virtual_marker(subject.dynamic[dynamic_trial_name], marker_name, marker_data)
-    new_subject = update_subject_struct(matt, dynamic_trial_name, with_added_marker)
+    new_subject = update_subject_struct(subject, dynamic_trial_name, with_added_marker)
 
     return new_subject

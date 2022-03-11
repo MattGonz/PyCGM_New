@@ -3,6 +3,8 @@ from .new_io import frame_dtype, loadDataNew, loadVSK
 import time
 import re
 from numpy.lib import recfunctions as rfn
+import static
+from .pycgmIO import loadData
 
 def structure_subject(static_trial_filename, dynamic_trials, measurement_filename):
     '''
@@ -43,6 +45,12 @@ def structure_subject(static_trial_filename, dynamic_trials, measurement_filenam
     def structure_measurements(measurements):
         sm_names = measurements[0]
         sm_dtype = np.dtype([(key, 'f8') for key in sm_names])
+        sm_dtype = []
+        for key in sm_names:
+            if key == "GCS":
+                sm_dtype.append((key, 'f8', (3,3)))
+            else:
+                sm_dtype.append((key, 'f8'))
         measurements_struct = np.array(tuple(measurements[1]), dtype=sm_dtype)
         return measurements_struct
 
@@ -51,9 +59,19 @@ def structure_subject(static_trial_filename, dynamic_trials, measurement_filenam
 
     start = time.time()
 
+
+    # HACK
+    # load static trial, measurements for use in getStatic (has not been refactored)
+    old_static_data = loadData(static_trial_filename)
+    uncalibrated_measurements = loadVSK(measurement_filename)
+    uncalibrated_measurements_dict = dict(zip(uncalibrated_measurements[0], uncalibrated_measurements[1]))
+
+    # calibrate subject measurements
+    calibrated_measurements_dict = static.getStatic(old_static_data, uncalibrated_measurements_dict)
+    calibrated_measurements_split = [list(calibrated_measurements_dict.keys()), list(calibrated_measurements_dict.values())]
+
+    measurements_struct = structure_measurements(calibrated_measurements_split)
     static_trial = loadDataNew(static_trial_filename)
-    measurements = loadVSK(measurement_filename)
-    measurements_struct = structure_measurements(measurements)
 
     dynamic_dtype = []
     marker_structs = []

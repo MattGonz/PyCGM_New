@@ -20,8 +20,8 @@ class Subject_CustomPelvis(Subject):
         # print(f"{lpsi.shape=}")
 
         # Print to verify overridden function is being called
-        print("\n\tCustomPelvis called instead") 
-        print(f"\t\t{bodymass=},\n\t\t{imaginary_measurement=},\n\t\t{rasi.shape=},\n\t\t{lasi.shape=},\n\t\t{rpsi.shape=},\n\t\t{lpsi.shape=},\n\t\t{sacr=}\n")
+        # print("\n\tCustomPelvis called instead") 
+        # print(f"\t\t{bodymass=},\n\t\t{imaginary_measurement=},\n\t\t{rasi.shape=},\n\t\t{lasi.shape=},\n\t\t{rpsi.shape=},\n\t\t{lpsi.shape=},\n\t\t{sacr=}\n")
 
         # Get the Pelvis Joint Centre
         if sacr is None:

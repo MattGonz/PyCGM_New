@@ -37,6 +37,9 @@ class Subject():
         self.axis_name_to_index  = { axis: index for index, axis in enumerate(self.axis_keys) }
         self.angle_name_to_index = { angle: index for index, angle in enumerate(self.angle_keys) }
 
+        self.axis_results = {trial_name: [None]*len(self.axis_keys) for trial_name in self.trial_names}
+        self.angle_results = {trial_name: [None]*len(self.angle_keys) for trial_name in self.trial_names}
+
         # get default parameter keys
         self.axis_func_parameter_names  = AxisFunctions().parameters()
         self.angle_func_parameter_names = AngleFunctions().parameters()
@@ -58,12 +61,18 @@ class Subject():
 
 
     def run(self):
-        self.axis_functions = [self.calc_axis_pelvis]
+
+        # self.axis_functions = [self.calc_axis_pelvis]
+        self.axis_functions = self.axis_functions[:2]
+
+        # TODO figure out how to store 4x4 matrices in vectorized form
+        # (necessary for transpose)
+
         ## TODO change this once all parameters types (axes, angles) 
         ## are in struct and can be passed 
 
         all_trial_results = []
-        for trial in self.trial_names:
+        for trial_name in self.trial_names:
 
             axis_results = []
             angle_results = []
@@ -76,7 +85,7 @@ class Subject():
                 # running using pre-fetched parameters
                 start = time.time()
 
-                parameters = self.axis_func_parameters[trial][index]
+                parameters = self.axis_func_parameters[trial_name][index]
                 ret_axes = np.asarray(func(*parameters))
 
                 if ret_axes.ndim == 3:  # multiple axes returned by one function
@@ -87,9 +96,18 @@ class Subject():
 
                 end = time.time()
 
-                print(f"\t{trial}\t pelvis axis done in {end-start}s")
+                print(f"\t{trial_name}\t {func.__name__} done in {end-start}s")
 
-            all_trial_results.append([np.asarray(axis_results), np.asarray(angle_results)])
+                self.axis_results[trial_name][index] = ret_axes
+                # print(f"{self.axis_results[trial_name][index]=}")
+
+                # update calculated axis parameters
+                start = time.time()
+                self.axis_func_parameters[trial_name]  = self.names_to_values(self.axis_func_parameter_names, trial_name)
+                end = time.time()
+                # print(f"\t{trial_name}\t updated parameters in {end-start}s")
+
+            # all_trial_results.append([np.asarray(axis_results), np.asarray(angle_results)])
 
         return all_trial_results
     
@@ -157,20 +175,20 @@ class Subject():
                 elif isinstance(parameter, Measurement):
                     # use measurement name to retrieve from struct
                     try:
-                        parameter = self.data.static.measurements[parameter.name][0]
+                        new_parameter = self.data.static.measurements[parameter.name][0]
                     except ValueError:
-                        parameter = None
+                        new_parameter = None
                         # print(f"{trial_name}\t does not have a measurement named {parameter.name}")
 
-                    updated_parameters_list[function_index].append(parameter)
+                    updated_parameters_list[function_index].append(new_parameter)
 
                 # TODO axes and angles in struct
-                # elif isinstance(parameter, Axis):
-                #     # use axis name to find index
-                #     parameter_index = self.axis_name_to_index[parameter.name] if parameter.name in self.axis_name_to_index.keys() else None
+                elif isinstance(parameter, Axis):
+                    # use axis name to find index
+                    parameter_index = self.axis_name_to_index[parameter.name] if parameter.name in self.axis_name_to_index.keys() else None
 
-                #     # add axis index
-                #     updated_parameters_list[function_index].append([parameter.dataset_index, parameter_index])
+                    # add axis index
+                    updated_parameters_list[function_index].append(self.axis_results[trial_name][parameter_index])
 
                 # elif isinstance(parameter, Angle):
                 #     # use angle name to find index
@@ -186,39 +204,6 @@ class Subject():
         return updated_parameters_list
 
 
-    def calc_axis_pelvis(self, rasi, lasi, rpsi, lpsi, sacr=None):
-        """
-        Make the Pelvis Axis.
-        """
-
-        # Verify that the input data is the correct shape
-        # print(f"{rasi.shape=}")
-        # print(f"{lasi.shape=}")
-        # print(f"{rpsi.shape=}")
-        # print(f"{lpsi.shape=}")
-
-        # Get the Pelvis Joint Centre
-        if sacr is None:
-            sacr = (rpsi + lpsi) / 2.0
-
-        # Origin is Midpoint between RASI and LASI
-        o = (rasi+lasi)/2.0
-
-        b1 = o - sacr
-        b2 = lasi - rasi
-
-        # y is normalized b2
-        y = b2 / np.linalg.norm(b2,axis=1)[:, np.newaxis]
-
-        b3 = b1 - ( y * np.sum(b1*y,axis=1)[:, np.newaxis] )
-        x = b3/np.linalg.norm(b3,axis=1)[:, np.newaxis]
-
-        # Z-axis is cross product of x and y vectors.
-        z = np.cross(x, y)
-
-        new_stack_col = np.column_stack([x,y,z,o])
-
-        return new_stack_col
 
 
     def modify_function(self, function, markers=None, measurements=None, axes=None, angles=None, returns_axes=None, returns_angles=None):

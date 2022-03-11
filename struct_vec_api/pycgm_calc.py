@@ -13,86 +13,13 @@ class CalcAxes():
                       self.calc_axis_elbow, self.calc_axis_wrist, self.calc_axis_hand]
 
     def calc_axis_pelvis(self, rasi, lasi, rpsi, lpsi, sacr=None):
-        r"""Make the Pelvis Axis.
-
-        Takes in RASI, LASI, RPSI, LPSI, and optional SACR markers.
-
-        Calculates the pelvis axis.
-
-        Markers used: RASI, LASI, RPSI, LPSI
-
-        Other landmarks used: sacrum
-
-        Pelvis X_axis: Computed with a Gram-Schmidt orthogonalization procedure
-        [1]_ and then normalized.
-
-        Pelvis Y_axis: LASI-RASI x,y,z positions, then normalized.
-
-        Pelvis Z_axis: Cross product of x_axis and y_axis.
-
-        :math:`$o = m_{rasi} + m_{lasi} / 2$`
-
-        :math:`$y = \frac{m_{lasi} - m_{rasi}}{||m_{lasi} - m_{rasi}||}$`
-
-        :math:`x = \frac{(m_{origin} - m_{sacr}) - ((m_{origin} - m_{sacr}) \dot y) * y}{||(m_{origin} - m_{sacr}) - ((m_{origin} - m_{sacr}) \cdot y) \times y||}`
-
-        :math:`z = x \times y`
-
-        Parameters
-        ----------
-        rasi: array
-            1x3 RASI marker
-        lasi: array
-            1x3 LASI marker
-        rpsi: array
-            1x3 RPSI marker
-        lpsi: array
-            1x3 LPSI marker
-        sacr: array, optional
-            1x3 SACR marker. If not present, RPSI and LPSI are used instead.
-
-        Returns
-        -------
-        pelvis : array
-            4x4 affine matrix with pelvis x, y, z axes and pelvis origin.
-
-        .. math::
-
-            \begin{bmatrix}
-                \hat{x}_x & \hat{x}_y & \hat{x}_z & o_x \\
-                \hat{y}_x & \hat{y}_y & \hat{y}_z & o_y \\
-                \hat{z}_x & \hat{z}_y & \hat{z}_z & o_z \\
-                0 & 0 & 0 & 1 \\
-            \end{bmatrix}
-
-        References
-        ----------
-        .. [1] M. P. Kadaba, H. K. Ramakrishnan, and M. E. Wootten, “Measurement of
-                lower extremity kinematics during level walking,” J. Orthop. Res.,
-                vol. 8, no. 3, pp. 383–392, May 1990, doi: 10.1002/jor.1100080310.
-
-        Examples
-        --------
-        >>> import numpy as np
-        >>> np.set_printoptions(suppress=True)
-        >>> from .pyCGM import calc_axis_pelvis
-        >>> rasi = np.array([ 395.36,  428.09, 1036.82])
-        >>> lasi = np.array([ 183.18,  422.78, 1033.07])
-        >>> rpsi = np.array([ 341.41,  246.72, 1055.99])
-        >>> lpsi = np.array([ 255.79,  241.42, 1057.30])
-        >>> [arr.round(2) for arr in calc_axis_pelvis(rasi, lasi, rpsi, lpsi, None)] # doctest: +NORMALIZE_WHITESPACE
-        [array([ -0.02,   0.99,  -0.12, 289.27]), 
-        array([ -1.  ,  -0.03,  -0.02, 425.43]), 
-        array([  -0.02,    0.12,    0.99, 1034.94]), 
-        array([0., 0., 0., 1.])]
         """
-        # Get the Pelvis Joint Centre
+        Make the Pelvis Axis.
+        """
 
+        # Get the Pelvis Joint Centre
         if sacr is None:
             sacr = (rpsi + lpsi) / 2.0
-
-        # REQUIRED LANDMARKS:
-        # sacrum
 
         # Origin is Midpoint between RASI and LASI
         o = (rasi+lasi)/2.0
@@ -101,23 +28,17 @@ class CalcAxes():
         b2 = lasi - rasi
 
         # y is normalized b2
-        y = b2 / np.linalg.norm(b2)
+        y = b2 / np.linalg.norm(b2,axis=1)[:, np.newaxis]
 
-        b3 = b1 - (np.dot(b1, y) * y)
-        x = b3/np.linalg.norm(b3)
+        b3 = b1 - ( y * np.sum(b1*y,axis=1)[:, np.newaxis] )
+        x = b3/np.linalg.norm(b3,axis=1)[:, np.newaxis]
 
         # Z-axis is cross product of x and y vectors.
         z = np.cross(x, y)
 
-        pelvis = np.zeros((4, 4))
-        pelvis[3, 3] = 1.0
-        pelvis[0, :3] = x
-        pelvis[1, :3] = y
-        pelvis[2, :3] = z
-        pelvis[:3, 3] = o
+        new_stack_col = np.column_stack([x,y,z,o])
 
-        return pelvis
-
+        return new_stack_col
 
     def calc_joint_center_hip(self, pelvis, mean_leg_length, right_asis_to_trochanter, left_asis_to_trochanter, inter_asis_distance):
         u"""Calculate the right and left hip joint center.
@@ -180,7 +101,7 @@ class CalcAxes():
         # pelvis axis
 
         pelvis = np.asarray(pelvis)
-        pel_origin = pelvis[:3, 3]
+        pel_origin = pelvis[:, 9:12]
 
         # Model's eigen value
         #
@@ -216,10 +137,11 @@ class CalcAxes():
             math.sin(beta) - C * math.cos(theta) * math.cos(beta)
 
         # get the unit pelvis axis
-        pelvis_xaxis = pelvis[0, :3]
-        pelvis_yaxis = pelvis[1, :3]
-        pelvis_zaxis = pelvis[2, :3]
-        pelvis_axis = pelvis[:3, :3]
+        pelvis_xaxis = pelvis[:, :3]
+        pelvis_yaxis = pelvis[:, 3:6]
+        pelvis_zaxis = pelvis[:, 6:9]
+        pelvis_axis = np.array([pelvis_xaxis, pelvis_yaxis, pelvis_zaxis])
+
 
         # multiply the distance to the unit pelvis axis
         left_hip_jc_x = pelvis_xaxis * L_Xh
@@ -233,14 +155,14 @@ class CalcAxes():
             left_hip_jc_x[2]+left_hip_jc_y[2]+left_hip_jc_z[2]
         ])
 
-        left_hip_jc = np.matmul(pelvis_axis.T, np.array([L_Xh, L_Yh, L_Zh]))
+        left_hip_jc = np.matmul(pelvis_axis.T, np.array([L_Xh, L_Yh, L_Zh])).T
 
         R_hipJCx = pelvis_xaxis * R_Xh
         R_hipJCy = pelvis_yaxis * R_Yh
         R_hipJCz = pelvis_zaxis * R_Zh
         right_hip_jc = R_hipJCx + R_hipJCy + R_hipJCz
 
-        right_hip_jc = np.matmul(pelvis_axis.T, np.array([R_Xh, R_Yh, R_Zh]))
+        right_hip_jc = np.matmul(pelvis_axis.T, np.array([R_Xh, R_Yh, R_Zh])).T
 
         left_hip_jc = left_hip_jc+pel_origin
         right_hip_jc = right_hip_jc+pel_origin

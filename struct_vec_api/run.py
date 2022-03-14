@@ -1,7 +1,5 @@
 from pyCGM import PyCGM, Model
 from custom_CGMs import Model_CustomPelvis, Model_NewFunction
-import cProfile, pstats, io
-from pstats import SortKey
 
 # Includes 59993 frame trial
 # matt = Model('SampleData/Sample_2/RoboStatic.c3d', \
@@ -27,4 +25,10 @@ matt_custom = Model_NewFunction('SampleData/Sample_2/RoboStatic.c3d', \
 
 cgm = PyCGM([matt, matt_modified, matt_custom])
 cgm.run_all()
+
+# Access output axes from the original model (matt)
+print(f"{matt.data.dynamic.RoboWalk.axes.Pelvis.shape=}")
+
+# Access output axes from the model at index 2 (matt_custom)
+print(f"{cgm[2].data.dynamic.RoboWalk.axes.Eyeball.shape=}")
 

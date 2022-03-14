@@ -273,8 +273,75 @@ class Model(ModelCreator):
 
                 end = time.time()
 
-                print(f"\t{trial_name}\t{func.__name__}\t{end-start:.5f}s")
-    
+                print(f"\t{trial_name[:10]}...\t{func.__name__}\t{end-start:.5f}s")
+
+        start = time.time()
+        self.structure_model_output()
+        end = time.time()
+        print(f'\tTime to structure model output:\t\t{end-start:.5f}s\n')
+
+
+    def structure_model_output(self):
+        """
+        Recreates the original model structure, but with the 
+        model outputs inserted.
+
+        Notes
+        -----
+        Accessing measurement data:
+            subject.static.measurements.{measurement name}
+            e.g. subject.static.measurements.LeftLegLength
+
+        Accessing static trial data:
+            subject.static.markers.{marker name}.point.{x, y, z}
+            e.g. subject.static.markers.LASI.point.x
+
+        Accessing dynamic trial data:
+            Input markers:
+                subject.dynamic.{filename}.markers.{marker name}.point.{x, y, z}
+                e.g. subject.RoboWalk.markers.LASI.point.x
+            Output axes:
+                subject.dynamic.{filename}.axes.{axis name}
+                e.g. subject.RoboWalk.axes.Pelvis
+            Output angles:
+                subject.dynamic.{filename}.angles.{angle name}
+                e.g. subject.RoboWalk.angles.RHip
+        """
+
+        dynamic_dtype = []
+
+        for trial_name in self.trial_names:
+            axis_output_dtype   = self.axis_results[trial_name].dtype
+            angle_output_dtype  = self.angle_results[trial_name].dtype
+
+            marker_input_dtype = self.data.dynamic[trial_name].markers.dtype
+            
+            trial_dtype = [('markers', marker_input_dtype), \
+                           ('axes', axis_output_dtype),     \
+                           ('angles', angle_output_dtype)]
+
+            dynamic_dtype.append((trial_name, trial_dtype))
+
+
+        subject_dtype = [('static', [('markers', self.data.static.markers.dtype), \
+                                     ('measurements', self.data.static.measurements.dtype)]), \
+                         ('dynamic', dynamic_dtype)]
+
+        subject = np.zeros((1), dtype=subject_dtype)
+        subject['static']['markers'] = self.data.static.markers
+        subject['static']['measurements'] = self.data.static.measurements
+
+        for trial_name in self.trial_names:
+            subject['dynamic'][trial_name]['markers'] = self.data.dynamic[trial_name].markers
+            subject['dynamic'][trial_name]['axes']    = self.axis_results[trial_name]
+            subject['dynamic'][trial_name]['angles']  = self.angle_results[trial_name]
+
+        subject = subject.view(np.recarray)
+
+        self.data = subject
+            
+
+
 
     def get_markers(self, arr, names, points_only=True, debug=False):
         start = time.time()

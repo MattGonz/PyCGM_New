@@ -24,18 +24,11 @@ class ModelCreator():
         # HACK for testing since only a few functions are currently vectorized
         self.axis_functions = self.axis_functions[:2]
 
-        # map function names to indices
+        # map function names to indices: 'calc_pelvis_axis': 0 ...
         self.map_function_names_to_index()
 
-        # map function names to indices: 'pelvis_axis': 0 ...
-        self.axis_function_to_index  = { function.__name__: index for index, function in enumerate(self.axis_functions) }
-        self.angle_function_to_index = { function.__name__: index for index, function in enumerate(self.angle_functions) }
-
-        # map function names to the axes they return
-        self.axis_function_to_return = return_keys.axes()
-
-        # map function names to the angles they return
-        self.angle_function_to_return = return_keys.angles()
+        # map function names to the names of the data they return: 'calc_pelvis_axis': ['Pelvis'] ...
+        self.map_function_names_to_returns()
 
         # map returned axis and angle indices so functions can use results of the current frame
         # flat list of all returned axis names
@@ -111,6 +104,26 @@ class ModelCreator():
         for index, function in enumerate(self.angle_functions):
             self.angle_function_to_index[function.__name__] = index
 
+    def map_function_names_to_returns(self):
+        """
+        Map function names to the names of the data they return.
+
+        e.g: Axis functions
+        self.axis_function_to_return  = { 'calc_pelvis_axis': ['Pelvis'],
+                                          'calc_joint_center_hip: ['RHipJC', 'LHipJC'],
+                                          ...
+                                        }
+
+        e.g: Angle functions
+        self.angle_function_to_return = { 'calc_angle_pelvis': ['Pelvis'],
+                                          'calc_angle_hip': ['RHip', 'LHip'],
+                                          ...
+                                        }
+
+        }
+        """
+        self.axis_function_to_return = return_keys.axes()
+        self.angle_function_to_return = return_keys.angles()
 
     def set_axis_struct(self):
         """

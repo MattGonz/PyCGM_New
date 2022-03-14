@@ -104,6 +104,7 @@ class ModelCreator():
         for index, function in enumerate(self.angle_functions):
             self.angle_function_to_index[function.__name__] = index
 
+
     def map_function_names_to_returns(self):
         """
         Map function names to the names of the data they return.
@@ -124,6 +125,7 @@ class ModelCreator():
         """
         self.axis_function_to_return = return_keys.axes()
         self.angle_function_to_return = return_keys.angles()
+
 
     def set_axis_struct(self):
         """
@@ -241,18 +243,15 @@ class ModelCreator():
 
 
     def update_trial_parameters(self):
-        start = time.time()
         for trial in self.trial_names:
-            # set parameters of this trial
             self.axis_func_parameters[trial]  = self.names_to_values(self.axis_func_parameter_names, trial)
             self.angle_func_parameters[trial] = self.names_to_values(self.angle_func_parameter_names, trial)
-        end = time.time()
-        # print(f'Time to set all trial parameters: {end-start}')
 
 
 class Model(ModelCreator):
     def __init__(self, static_filename, dynamic_filenames, measurement_filename):
         super().__init__(static_filename, dynamic_filenames, measurement_filename)
+
 
     def run(self):
         """
@@ -353,8 +352,6 @@ class Model(ModelCreator):
 
         self.data = subject
             
-
-
 
     def get_markers(self, arr, names, points_only=True, debug=False):
         start = time.time()

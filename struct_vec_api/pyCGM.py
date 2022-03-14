@@ -9,7 +9,7 @@ from defaults import return_keys
 from pycgm_calc import CalcAngles, CalcAxes
 
 
-class Subject():
+class ModelCreator():
     def __init__(self, static_filename, dynamic_filenames, measurement_filename):
         self.data = subject_utils.structure_subject(static_filename, dynamic_filenames, measurement_filename)
         self.trial_names = self.data.dynamic.dtype.names
@@ -18,8 +18,14 @@ class Subject():
         self.measurement_name_to_index = {measurement_key: index for index, measurement_key in enumerate(self.measurement_keys)}
 
         # add non-overridden default pycgm_calc funcs to funcs list
-        self.axis_functions  = [func if not hasattr(self, func.__name__) else getattr(self, func.__name__) for func in CalcAxes().funcs]
-        self.angle_functions = [func if not hasattr(self, func.__name__) else getattr(self, func.__name__) for func in CalcAngles().funcs]
+        self.set_axis_functions()
+        self.set_angle_functions()
+
+        # HACK for testing since only a few functions are currently vectorized
+        self.axis_functions = self.axis_functions[:2]
+
+        # map function names to indices
+        self.map_function_names_to_index()
 
         # map function names to indices: 'pelvis_axis': 0 ...
         self.axis_function_to_index  = { function.__name__: index for index, function in enumerate(self.axis_functions) }
@@ -32,13 +38,15 @@ class Subject():
         self.angle_function_to_return = return_keys.angles()
 
         # map returned axis and angle indices so functions can use results of the current frame
-        self.axis_keys           = list(chain(*self.axis_function_to_return.values())) # flat list of all returned axes
-        self.angle_keys          = list(chain(*self.angle_function_to_return.values())) # flat list of all returned angles
+        # flat list of all returned axis names
+        # e.g. ['Pelvis','RHipJC', 'LHipJC','Hip','RKnee', 'LKnee', ...]
+        self.axis_keys           = list(chain.from_iterable(self.axis_function_to_return.values()))
+        self.angle_keys          = list(chain.from_iterable(self.angle_function_to_return.values()))
         self.axis_name_to_index  = { axis: index for index, axis in enumerate(self.axis_keys) }
         self.angle_name_to_index = { angle: index for index, angle in enumerate(self.angle_keys) }
 
-        self.axis_results = {trial_name: [None]*len(self.axis_keys) for trial_name in self.trial_names}
-        self.angle_results = {trial_name: [None]*len(self.angle_keys) for trial_name in self.trial_names}
+        self.set_axis_struct()
+        self.set_angle_struct()
 
         # get default parameter keys
         self.axis_func_parameter_names  = AxisFunctions().parameters()
@@ -50,91 +58,114 @@ class Subject():
         self.update_trial_parameters()
 
 
-    def update_trial_parameters(self):
-        start = time.time()
-        for trial in self.trial_names:
-            # set parameters of this trial
-            self.axis_func_parameters[trial]  = self.names_to_values(self.axis_func_parameter_names, trial)
-            self.angle_func_parameters[trial] = self.names_to_values(self.angle_func_parameter_names, trial)
-        end = time.time()
-        print(f'Time to set all trial parameters: {end-start}')
+    def set_axis_functions(self):
+        """
+        Initialize axis functions from pycgm_calc.CalcAxes if they have not
+        already been defined in a custom model.
+        """
+        self.axis_functions = []
+        for func in CalcAxes().funcs:
+            if hasattr(self, func.__name__):
+                self.axis_functions.append(getattr(self, func.__name__))
+            else:
+                self.axis_functions.append(func)
 
 
-    def run(self):
+    def set_angle_functions(self):
+        """
+        Initialize angle functions from pycgm_calc.CalcAngles if they have not
+        already been defined in a custom model.
+        """
+        self.angle_functions = []
+        for func in CalcAngles().funcs:
+            if hasattr(self, func.__name__):
+                self.angle_functions.append(getattr(self, func.__name__))
+            else:
+                self.angle_functions.append(func)
 
-        # self.axis_functions = [self.calc_axis_pelvis]
-        self.axis_functions = self.axis_functions[:2]
 
-        # TODO figure out how to store 4x4 matrices in vectorized form
-        # (necessary for transpose)
+    def map_function_names_to_index(self):
+        """
+        Map function names to indices.
 
-        ## TODO change this once all parameters types (axes, angles) 
-        ## are in struct and can be passed 
+        e.g: Axis functions
+        self.axis_function_to_index  = { 'calc_pelvis_axis': 0,
+                                         'calc_joint_center_hip: 1,
+                                         ...
+                                       }
 
-        all_trial_results = []
+        e.g: Angle functions
+        self.angle_function_to_index = { 'calc_angle_pelvis': 0,
+                                         'calc_angle_hip': 1,
+                                         ...
+                                       }
+
+        }
+        """
+        self.axis_function_to_index  = {}
+        self.angle_function_to_index = {}
+
+        for index, function in enumerate(self.axis_functions):
+            self.axis_function_to_index[function.__name__] = index
+
+        for index, function in enumerate(self.angle_functions):
+            self.angle_function_to_index[function.__name__] = index
+
+
+    def set_axis_struct(self):
+        """
+        Create a dictionary where each key is a trial name and each value
+        is a structured array of that trial's calculated axes.
+
+        Example of dtypes:
+        {'6000FrameTrial': [
+                            ('Pelvis', '<f8', (6000, 3, 4)),
+                            ('RHipJC', '<f8', (6000, 3, 4)), 
+                            ('LHipJC', '<f8', (6000, 3, 4)),
+                            ...
+                        ],
+         '59993FrameTrial': [
+                            ('Pelvis', '<f8', (59993, 3, 4)),
+                            ('RHipJC', '<f8', (59993, 3, 4)), 
+                            ('LHipJC', '<f8', (59993, 3, 4)),
+                            ...
+                        ],
+        }
+        """
+
+        self.axis_results = {}
         for trial_name in self.trial_names:
-
-            axis_results = []
-            angle_results = []
-
-            # TODO consider how functions are going to take in already-calculated axes
-            # maybe use [dataset, index/slice] like before
-            # data = [self.measurement_values, frame, axis_results, angle_results]
-
-            for index, func in enumerate(self.axis_functions):
-                # running using pre-fetched parameters
-                start = time.time()
-
-                parameters = self.axis_func_parameters[trial_name][index]
-                ret_axes = np.asarray(func(*parameters))
-
-                if ret_axes.ndim == 3:  # multiple axes returned by one function
-                    for axis in ret_axes:
-                        axis_results.append(axis)
-                else:
-                    axis_results.append(ret_axes)
-
-                end = time.time()
-
-                print(f"\t{trial_name}\t {func.__name__} done in {end-start}s")
-
-                self.axis_results[trial_name][index] = ret_axes
-                # print(f"{self.axis_results[trial_name][index]=}")
-
-                # update calculated axis parameters
-                start = time.time()
-                self.axis_func_parameters[trial_name]  = self.names_to_values(self.axis_func_parameter_names, trial_name)
-                end = time.time()
-                # print(f"\t{trial_name}\t updated parameters in {end-start}s")
-
-            # all_trial_results.append([np.asarray(axis_results), np.asarray(angle_results)])
-
-        return all_trial_results
-    
-
-    def get_markers(self, arr, names, points_only=True, debug=False):
-        start = time.time()
-
-        if isinstance(names, str):
-            names = [names]
-        num_frames = arr[0][0].shape[0]
-
-        if any(name not in arr[0].dtype.names for name in names):
-            return None
-
-        rec = rfn.repack_fields(arr[names]).view(subject_utils.frame_dtype()).reshape(len(names), int(num_frames))
+            num_frames = self.data.dynamic[trial_name].markers[0][0].shape[0]
+            axis_dtype = np.dtype([(key, 'f8', ((num_frames, 3, 4))) for key in self.axis_keys])
+            self.axis_results[trial_name] = np.zeros([], dtype=axis_dtype)
 
 
-        if points_only:
-            rec = rec['point'][['x', 'y', 'z']]
+    def set_angle_struct(self):
+        """
+        Create a dictionary where each key is a trial name and each value
+        is a structured array of that trial's calculated angles.
 
-        rec = rfn.structured_to_unstructured(rec)
+        Example of dtypes:
+        {'6000FrameTrial': [
+                            ('Pelvis', '<f8', (6000, 3)),
+                            ('RHip',   '<f8', (6000, 3)), 
+                            ('LHip',   '<f8', (6000, 3)),
+                            ...
+                        ],
+         '59993FrameTrial': [
+                            ('Pelvis', '<f8', (59993, 3)),
+                            ('RHip',   '<f8', (59993, 3)), 
+                            ('LHip',   '<f8', (59993, 3)),
+                            ...
+                        ],
+        }
+        """
 
-        end = time.time()
-        if debug:
-            print(f'Time to get {len(names)} markers: {end-start}')
-
-        return rec
+        self.angle_results = {}
+        for trial_name in self.trial_names:
+            num_frames = self.data.dynamic[trial_name].markers[0][0].shape[0]
+            angle_dtype = np.dtype([(key, 'f8', ((num_frames, 3))) for key in self.angle_keys])
+            self.angle_results[trial_name] = np.zeros([], dtype=angle_dtype)
 
 
     def names_to_values(self, function_list, trial_name):
@@ -166,14 +197,14 @@ class Subject():
             for parameter in function_parameters:
 
                 if isinstance(parameter, Marker):
-                    # use marker name to retrieve from struct
+                    # Use marker name to retrieve from marker struct
                     new_parameter = self.get_markers(self.data.dynamic[trial_name].markers, parameter.name, True)
                     if new_parameter is not None:
                         new_parameter = new_parameter[0]
                     updated_parameters_list[function_index].append(new_parameter)
 
                 elif isinstance(parameter, Measurement):
-                    # use measurement name to retrieve from struct
+                    # Use measurement name to retrieve from measurements struct
                     try:
                         new_parameter = self.data.static.measurements[parameter.name][0]
                     except ValueError:
@@ -182,20 +213,12 @@ class Subject():
 
                     updated_parameters_list[function_index].append(new_parameter)
 
-                # TODO axes and angles in struct
                 elif isinstance(parameter, Axis):
-                    # use axis name to find index
-                    parameter_index = self.axis_name_to_index[parameter.name] if parameter.name in self.axis_name_to_index.keys() else None
+                    # Add parameter from axis_results struct
+                    updated_parameters_list[function_index].append(self.axis_results[trial_name][parameter.name])
 
-                    # add axis index
-                    updated_parameters_list[function_index].append(self.axis_results[trial_name][parameter_index])
-
-                # elif isinstance(parameter, Angle):
-                #     # use angle name to find index
-                #     parameter_index = self.angle_name_to_index[parameter.name] if parameter.name in self.angle_name_to_index.keys() else None
-
-                #     # add angle index
-                #     updated_parameters_list[function_index].append([parameter.dataset_index, parameter_index])
+                elif isinstance(parameter, Angle):
+                    updated_parameters_list[function_index].append(self.angle_results[trial_name][parameter.name])
 
                 else:
                     # parameter is a constant
@@ -204,12 +227,83 @@ class Subject():
         return updated_parameters_list
 
 
+    def update_trial_parameters(self):
+        start = time.time()
+        for trial in self.trial_names:
+            # set parameters of this trial
+            self.axis_func_parameters[trial]  = self.names_to_values(self.axis_func_parameter_names, trial)
+            self.angle_func_parameters[trial] = self.names_to_values(self.angle_func_parameter_names, trial)
+        end = time.time()
+        print(f'Time to set all trial parameters: {end-start}')
+
+
+class Model(ModelCreator):
+    def __init__(self, static_filename, dynamic_filenames, measurement_filename):
+        super().__init__(static_filename, dynamic_filenames, measurement_filename)
+
+    def run(self):
+        """
+        Run each trial in the model and insert output values into 
+        their respective axis_results and angle_results structs.
+        """
+
+        for trial_name in self.trial_names:
+            for index, func in enumerate(self.axis_functions):
+
+                # Retrieve the names of the axes returned by this function
+                # e.g. 'calc_axis_pelvis' -> 'Pelvis'
+                returned_axis_names = self.axis_function_to_return[func.__name__]
+
+                start = time.time()
+
+                # Get the parameters for this function, run it
+                parameters = self.axis_func_parameters[trial_name][index]
+                ret_axes = np.array(func(*parameters))
+
+                # Insert returned axes into the self.axis_results structured array
+                if ret_axes.ndim == 4:
+                    # Multiple axes returned by one function
+                    for ret_axes_index, axis in enumerate(ret_axes):
+                        # Insert each axis into axis_results
+                        self.axis_results[trial_name][returned_axis_names[ret_axes_index]] = axis
+
+                else:
+                    # Insert returned axis into axis_results
+                    self.axis_results[trial_name][returned_axis_names[0]] = ret_axes
+
+                end = time.time()
+
+                print(f"\t{trial_name}\t{func.__name__} done in {end-start:.5f}s")
+    
+
+    def get_markers(self, arr, names, points_only=True, debug=False):
+        start = time.time()
+
+        if isinstance(names, str):
+            names = [names]
+        num_frames = arr[0][0].shape[0]
+
+        if any(name not in arr[0].dtype.names for name in names):
+            return None
+
+        rec = rfn.repack_fields(arr[names]).view(subject_utils.frame_dtype()).reshape(len(names), int(num_frames))
+
+
+        if points_only:
+            rec = rec['point'][['x', 'y', 'z']]
+
+        rec = rfn.structured_to_unstructured(rec)
+
+        end = time.time()
+        if debug:
+            print(f'Time to get {len(names)} markers: {end-start}')
+
+        return rec
 
 
     def modify_function(self, function, markers=None, measurements=None, axes=None, angles=None, returns_axes=None, returns_angles=None):
         """
-        modify an existing function's parameters and returned values
-        used for overriding a function's parameters or returned results
+        Modify an existing function's parameters and returned values
         """
 
         if returns_axes is not None and returns_angles is not None:
@@ -251,22 +345,12 @@ class Subject():
         # add returned axes, update related attributes
 
             self.axis_function_to_return[function] = returns_axes
-
-            self.num_axes                          = len(list(chain(*self.axis_function_to_return.values()))) # len(all of the returned axes)
-            self.num_axis_floats_per_frame         = self.num_axes * 16
-            # self.axis_results_shape                = (self.num_frames, self.num_axes, 4, 4)
-
             self.axis_name_to_index                = {axis_name: index for index, axis_name in enumerate(self.axis_keys)}
 
         if returns_angles is not None:
         # add returned angles, update related attributes
 
             self.angle_function_to_return[function] = returns_angles
-
-            self.num_angles                         = len(list(chain(*self.angle_function_to_return.values()))) # len(all of the returned angles)
-            self.num_angle_floats_per_frame         = self.num_angles * 3
-            # self.angle_results_shape                = (self.num_frames, self.num_angles, 3)
-
             self.angle_name_to_index                = {angle_name: index for index, angle_name in enumerate(self.angle_keys)}
 
         self.update_trial_parameters()
@@ -274,11 +358,10 @@ class Subject():
 
     def add_function(self, function, markers=None, measurements=None, axes=None, angles=None, returns_axes=None, returns_angles=None):
         """
-        old function, may need to use some variation of it later
-
-        add a custom function to pycgm
-        get func object and name
+        Add a custom function to the model.
         """
+
+        # Get func object and name
         if isinstance(function, str):
             func_name = function
             func      = getattr(self, func_name)
@@ -309,49 +392,47 @@ class Subject():
             # all all angle indices
             params.append(Angle(angle_name))
 
+
         if returns_axes is not None:
             # add returned axes, update related attributes
 
             self.axis_functions.append(func)
-            self.axis_func_parameters.append([])
             self.axis_keys.extend(returns_axes)
+            self.map_function_names_to_index()
 
             self.axis_name_to_index                = { axis_name: index for index, axis_name in enumerate(self.axis_keys) }
-            self.axis_function_to_index            = { function.__name__: index for index, function in enumerate(self.axis_functions)}
             self.axis_function_to_return[function] = returns_axes
+            self.axis_func_parameter_names[self.axis_function_to_index[function]] = params
+            self.set_axis_struct()
 
-            self.num_axes                          = len(list(chain(*self.axis_function_to_return.values())))
-            self.num_axis_floats_per_frame         = self.num_axes * 16
-            # self.axis_results_shape                = (self.num_frames, self.num_axes, 4, 4)
-
-            # set parameters of new function
-            self.axis_func_parameters[self.axis_function_to_index[func_name]] = params
+            for trial_name in self.trial_names:
+                self.axis_func_parameters[trial_name].append([])
 
         if returns_angles is not None:  # extend angles and update
             # add returned angles, update related attributes
 
             self.angle_functions.append(func)
-            self.angle_func_parameters.append([])
             self.angle_keys.extend(returns_angles)
+            self.map_function_names_to_index()
 
-            self.angle_function_to_index            = { function.__name__: index for index, function in enumerate(self.angle_functions)}
             self.angle_function_to_return[function] = returns_angles
             self.angle_name_to_index                = {angle_name: index for index, angle_name in enumerate(self.angle_keys)}
+            self.angle_func_parameter_names[self.angle_function_to_index[function]] = params
+            self.set_angle_struct()
 
-            self.num_angles                         = len(list(chain(*self.angle_function_to_return.values())))
-            self.num_angle_floats_per_frame         = self.num_angles * 3
-            # self.angle_results_shape                = (self.num_frames, self.num_angles, 3)
+            for trial_name in self.trial_names:
+                self.angle_func_parameters[trial_name].append([])
 
-            # set parameters of new function
-            self.angle_func_parameters[self.angle_function_to_index[func_name]] = params
+        self.update_trial_parameters()
 
 
 class PyCGM():
     def __init__(self, subjects):
-        if isinstance(subjects, Subject):
+        if isinstance(subjects, Model):
             subjects = [subjects]
 
         self.subjects = subjects
+
 
     def run_all(self):
         for i, subject in enumerate(self.subjects):
@@ -359,29 +440,6 @@ class PyCGM():
             subject.run()
 
 
-    def structure_trial_axes(self, axis_results):
-        """
-        old function, may need to use some variation of it later
-
-        takes a flat array of floats that represent the 4x4 axes at each frame
-        returns a structured array, indexed by axes[optional frame slice or index][axis name]
-        """
-
-        axis_result_keys = list(chain(*self.axis_function_to_return.values()))
-        axis_row_dtype = np.dtype([(key, 'f8', (4, 4)) for key in axis_result_keys])
-
-        return np.array([tuple(frame) for frame in axis_results.reshape(self.axis_results_shape)], dtype=axis_row_dtype)
-
-    def structure_trial_angles(self, angle_results):
-        """
-        old function, may need to use some variation of it later
-
-        takes a flat array of floats that represent the 3x1 angles at each frame
-        returns a structured array, indexed by angles[optional frame slice or index][angle name]
-        """
-
-        angle_result_keys = list(chain(*self.angle_function_to_return.values()))
-        angle_row_dtype   = np.dtype([(key, 'f8', (3,)) for key in angle_result_keys])
-
-        return np.array([tuple(frame) for frame in angle_results.reshape(self.angle_results_shape)], dtype=angle_row_dtype)
+    def __getitem__(self, index):
+        return self.subjects[index]
 

@@ -36,9 +36,11 @@ class CalcAxes():
         # Z-axis is cross product of x and y vectors.
         z = np.cross(x, y)
 
-        new_stack_col = np.column_stack([x,y,z,o])
+        num_frames = rasi.shape[0]
+        pelvis_stack = np.column_stack([x,y,z,o])
+        pelvis_matrix = pelvis_stack.reshape(num_frames,4,3).transpose(0,2,1)
 
-        return new_stack_col
+        return pelvis_matrix
 
     def calc_joint_center_hip(self, pelvis, mean_leg_length, right_asis_to_trochanter, left_asis_to_trochanter, inter_asis_distance):
         u"""Calculate the right and left hip joint center.
@@ -86,12 +88,16 @@ class CalcAxes():
         >>> right_asis_to_trochanter = 72.51
         >>> left_asis_to_trochanter = 72.51
         >>> inter_asis_distance = 215.90
-        >>> pelvis_axis = np.array([
-        ...     [0.14, 0.98, -0.11, 251.60],
-        ...     [-0.99, 0.13, -0.02, 391.74],
-        ...     [0, 0.1, 0.99, 1032.89],
-        ...     [0, 0, 0, 1]
-        ... ])
+        >>> pelvis_axis = np.array([[
+        ...                            [ 0.14, 0.98, -0.11,  251.60],
+        ...                            [-0.99, 0.13, -0.02,  391.74],
+        ...                            [ 0,    0.1,   0.99, 1032.89],
+        ...                         ],
+        ...                         [
+        ...                            [ 0.14, 0.98, -0.11,  251.60],
+        ...                            [-0.99, 0.13, -0.02,  391.74],
+        ...                            [ 0,    0.1,   0.99, 1032.89],
+        ...                        ]])
         >>> np.around(calc_joint_center_hip(pelvis_axis, mean_leg_length, right_asis_to_trochanter, left_asis_to_trochanter, inter_asis_distance), 2) #doctest: +NORMALIZE_WHITESPACE
         array([[307.36, 323.83, 938.72],
                [181.71, 340.33, 936.18]])
@@ -99,9 +105,6 @@ class CalcAxes():
 
         # Requires
         # pelvis axis
-
-        pelvis = np.asarray(pelvis)
-        pel_origin = pelvis[:, 9:12]
 
         # Model's eigen value
         #
@@ -137,37 +140,55 @@ class CalcAxes():
             math.sin(beta) - C * math.cos(theta) * math.cos(beta)
 
         # get the unit pelvis axis
-        pelvis_xaxis = pelvis[:, :3]
-        pelvis_yaxis = pelvis[:, 3:6]
-        pelvis_zaxis = pelvis[:, 6:9]
-        pelvis_axis = np.array([pelvis_xaxis, pelvis_yaxis, pelvis_zaxis])
+        pelvis = np.array(pelvis)
 
+        pelvis_xaxis = pelvis[:, :, 0]
+        pelvis_yaxis = pelvis[:, :, 1]
+        pelvis_zaxis = pelvis[:, :, 2]
+        pel_origin   = pelvis[:, :, 3]
+        pelvis_axis = np.array([pelvis_xaxis, pelvis_yaxis, pelvis_zaxis])
 
         # multiply the distance to the unit pelvis axis
         left_hip_jc_x = pelvis_xaxis * L_Xh
         left_hip_jc_y = pelvis_yaxis * L_Yh
         left_hip_jc_z = pelvis_zaxis * L_Zh
-        # left_hip_jc = left_hip_jc_x + left_hip_jc_y + left_hip_jc_z
 
-        left_hip_jc = np.asarray([
-            left_hip_jc_x[0]+left_hip_jc_y[0]+left_hip_jc_z[0],
-            left_hip_jc_x[1]+left_hip_jc_y[1]+left_hip_jc_z[1],
-            left_hip_jc_x[2]+left_hip_jc_y[2]+left_hip_jc_z[2]
-        ])
 
+        left_hip_jc = np.array([left_hip_jc_x, left_hip_jc_y, left_hip_jc_z])
         left_hip_jc = np.matmul(pelvis_axis.T, np.array([L_Xh, L_Yh, L_Zh])).T
 
-        R_hipJCx = pelvis_xaxis * R_Xh
-        R_hipJCy = pelvis_yaxis * R_Yh
-        R_hipJCz = pelvis_zaxis * R_Zh
-        right_hip_jc = R_hipJCx + R_hipJCy + R_hipJCz
+        right_hip_jc_x = pelvis_xaxis * R_Xh
+        right_hip_jc_y = pelvis_yaxis * R_Yh
+        right_hip_jc_z = pelvis_zaxis * R_Zh
 
+        right_hip_jc = np.array([right_hip_jc_x, right_hip_jc_y, right_hip_jc_z])
         right_hip_jc = np.matmul(pelvis_axis.T, np.array([R_Xh, R_Yh, R_Zh])).T
+
 
         left_hip_jc = left_hip_jc+pel_origin
         right_hip_jc = right_hip_jc+pel_origin
 
-        hip_jc = np.array([right_hip_jc, left_hip_jc])
+        num_frames = pelvis.shape[0]
+
+        right = np.zeros((num_frames, 4, 3))
+        x = np.zeros((num_frames, 3))
+        y = np.zeros((num_frames, 3))
+        z = np.zeros((num_frames, 3))
+        o = right_hip_jc
+
+        right_stack = np.column_stack([x, y, z, o])
+        right_hip_jc_matrix = right_stack.reshape(num_frames, 4, 3).transpose(0,2,1)
+
+        left = np.zeros((num_frames, 4, 3))
+        x = np.zeros((num_frames, 3))
+        y = np.zeros((num_frames, 3))
+        z = np.zeros((num_frames, 3))
+        o = left_hip_jc
+
+        left_stack = np.column_stack([x, y, z, o])
+        left_hip_jc_matrix = left_stack.reshape(num_frames, 4, 3).transpose(0,2,1)
+
+        hip_jc = np.array([right_hip_jc_matrix, left_hip_jc_matrix])
 
         return hip_jc
 

@@ -1,7 +1,7 @@
-from pyCGM import Subject
+from pyCGM import Model
 import numpy as np
 
-class Subject_CustomPelvis(Subject):
+class Model_CustomPelvis(Model):
     def __init__(self, static_trial, dynamic_trials, measurements):
         super().__init__(static_trial, dynamic_trials, measurements)
         self.modify_function('calc_axis_pelvis', measurements=["Bodymass", "ImaginaryMeasurement"],
@@ -42,7 +42,56 @@ class Subject_CustomPelvis(Subject):
         # Z-axis is cross product of x and y vectors.
         z = np.cross(x, y)
 
-        new_stack_col = np.column_stack([x,y,z,o])
+        num_frames = rasi.shape[0]
+        pelvis_stack = np.column_stack([x,y,z,o])
+        pelvis_matrix = pelvis_stack.reshape(num_frames,4,3).transpose(0,2,1)
 
-        return new_stack_col
+        return pelvis_matrix
+
+
+
+class Model_NewFunction(Model):
+    def __init__(self, static_trial, dynamic_trials, measurements):
+        super().__init__(static_trial, dynamic_trials, measurements)
+        self.add_function('calc_axis_eyeball', measurements=["Bodymass", "ImaginaryMeasurement"],
+                                               markers=["RASI", "LASI", "RPSI", "LPSI", "SACR"],
+                                               returns_axes=['Eyeball'])
+
+    def calc_axis_eyeball(self, bodymass, imaginary_measurement, rasi, lasi, rpsi, lpsi, sacr):
+        """
+        Make the Eyeball Axis.
+        
+        (Copy of calc_axis_pelvis function, but implemented as a custom
+        function that returns custom axes)
+        """
+
+        # Verify that the input data is the correct shape
+        # print(f"{rasi.shape=}")
+        # print(f"{lasi.shape=}")
+        # print(f"{rpsi.shape=}")
+        # print(f"{lpsi.shape=}")
+
+        # Get the Pelvis Joint Centre
+        if sacr is None:
+            sacr = (rpsi + lpsi) / 2.0
+
+        # Origin is Midpoint between RASI and LASI
+        o = (rasi+lasi)/2.0
+
+        b1 = o - sacr
+        b2 = lasi - rasi
+
+        # y is normalized b2
+        y = b2 / np.linalg.norm(b2,axis=1)[:, np.newaxis]
+        b3 = b1 - ( y * np.sum(b1*y,axis=1)[:, np.newaxis] )
+        x = b3/np.linalg.norm(b3,axis=1)[:, np.newaxis]
+
+        # Z-axis is cross product of x and y vectors.
+        z = np.cross(x, y)
+
+        num_frames = rasi.shape[0]
+        pelvis_stack = np.column_stack([x,y,z,o])
+        pelvis_matrix = pelvis_stack.reshape(num_frames,4,3).transpose(0,2,1)
+
+        return pelvis_matrix
 

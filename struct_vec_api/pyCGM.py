@@ -22,7 +22,7 @@ class ModelCreator():
         self.set_angle_functions()
 
         # HACK for testing since only a few functions are currently vectorized
-        self.axis_functions = self.axis_functions[:2]
+        self.axis_functions = self.axis_functions[:3]
 
         # map function names to indices: 'calc_pelvis_axis': 0 ...
         self.map_function_names_to_index()

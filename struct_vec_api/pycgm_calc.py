@@ -247,22 +247,19 @@ class CalcAxes():
         """
 
         # Get shared hip axis, it is inbetween the two hip joint centers
-        pelvis_axis = np.asarray(pelvis_axis)
-        hipaxis_center = (np.asarray(r_hip_jc) + np.asarray(l_hip_jc)) / 2.0
+        hipaxis_center = (r_hip_jc + l_hip_jc) / 2.0
 
         # convert pelvis_axis to x,y,z axis to use more easy
-        pelvis_x_axis = pelvis_axis[0, :3]
-        pelvis_y_axis = pelvis_axis[1, :3]
-        pelvis_z_axis = pelvis_axis[2, :3]
+        x = pelvis_axis[:, :, 0]
+        y = pelvis_axis[:, :, 1]
+        z = pelvis_axis[:, :, 2]
+        o = hipaxis_center[:, :, 3]
 
-        axis = np.zeros((4, 4))
-        axis[3, 3] = 1.0
-        axis[0, :3] = pelvis_x_axis
-        axis[1, :3] = pelvis_y_axis
-        axis[2, :3] = pelvis_z_axis
-        axis[:3, 3] = hipaxis_center
+        num_frames = pelvis_axis.shape[0]
+        hip_stack = np.column_stack([x, y, z, o])
+        hip_matrix = hip_stack.reshape(num_frames, 4, 3).transpose(0,2,1)
 
-        return axis
+        return hip_matrix
 
 
     def calc_axis_knee(self, rthi, lthi, rkne, lkne, r_hip_jc, l_hip_jc, rkne_width, lkne_width):

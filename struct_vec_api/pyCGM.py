@@ -234,7 +234,7 @@ class ModelCreator():
             self.axis_func_parameters[trial]  = self.names_to_values(self.axis_func_parameter_names, trial)
             self.angle_func_parameters[trial] = self.names_to_values(self.angle_func_parameter_names, trial)
         end = time.time()
-        print(f'Time to set all trial parameters: {end-start}')
+        # print(f'Time to set all trial parameters: {end-start}')
 
 
 class Model(ModelCreator):
@@ -273,7 +273,7 @@ class Model(ModelCreator):
 
                 end = time.time()
 
-                print(f"\t{trial_name}\t{func.__name__} done in {end-start:.5f}s")
+                print(f"\t{trial_name}\t{func.__name__}\t{end-start:.5f}s")
     
 
     def get_markers(self, arr, names, points_only=True, debug=False):
@@ -436,7 +436,7 @@ class PyCGM():
 
     def run_all(self):
         for i, subject in enumerate(self.subjects):
-            print(f"\nRunning subject {i+1} of {len(self.subjects)}")
+            print(f"Running subject {i+1} of {len(self.subjects)}")
             subject.run()
 
 

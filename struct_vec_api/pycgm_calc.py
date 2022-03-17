@@ -332,16 +332,18 @@ class CalcAxes():
         """
         # Get Global Values
         mm = 7.0
-        R_delta = (rkne_width/2.0) + mm
-        L_delta = (lkne_width/2.0) + mm
+        r_delta = (rkne_width/2.0) + mm
+        l_delta = (lkne_width/2.0) + mm
+        r_hip_jc = r_hip_jc[:, :, 3]
+        l_hip_jc = l_hip_jc[:, :, 3]
 
         # Determine the position of kneeJointCenter using calc_joint_center function
-        R = CalcUtils.calc_joint_center(rthi, r_hip_jc, rkne, R_delta)
-        L = CalcUtils.calc_joint_center(lthi, l_hip_jc, lkne, L_delta)
+        r_knee_o = CalcUtils.calc_joint_center(rthi, r_hip_jc, rkne, r_delta)
+        l_knee_o = CalcUtils.calc_joint_center(lthi, l_hip_jc, lkne, l_delta)
 
         # Z axis is Thigh bone calculated by the hipJC and  kneeJC
         # the axis is then normalized
-        axis_z = r_hip_jc-R
+        axis_z = r_hip_jc-r_knee_o
 
         # X axis is perpendicular to the points plane which is determined by KJC, HJC, KNE markers.
         # and calculated by each point's vector cross vector.
@@ -353,11 +355,11 @@ class CalcAxes():
         # the axis is then normalized.
         axis_y = np.cross(axis_z, axis_x)
 
-        Raxis = np.asarray([axis_x, axis_y, axis_z])
+        r_axis = np.array([axis_x, axis_y, axis_z])
 
         # Z axis is Thigh bone calculated by the hipJC and  kneeJC
         # the axis is then normalized
-        axis_z = l_hip_jc-L
+        axis_z = l_hip_jc-l_knee_o
 
         # X axis is perpendicular to the points plane which is determined by KJC, HJC, KNE markers.
         # and calculated by each point's vector cross vector.
@@ -370,37 +372,25 @@ class CalcAxes():
         # the axis is then normalized.
         axis_y = np.cross(axis_z, axis_x)
 
-        Laxis = np.asarray([axis_x, axis_y, axis_z])
+        l_axis = np.array([axis_x, axis_y, axis_z])
 
-        # Clear the name of axis and then nomalize it.
-        R_knee_x_axis = Raxis[0]
-        R_knee_x_axis = R_knee_x_axis/np.linalg.norm(R_knee_x_axis)
-        R_knee_y_axis = Raxis[1]
-        R_knee_y_axis = R_knee_y_axis/np.linalg.norm(R_knee_y_axis)
-        R_knee_z_axis = Raxis[2]
-        R_knee_z_axis = R_knee_z_axis/np.linalg.norm(R_knee_z_axis)
-        L_knee_x_axis = Laxis[0]
-        L_knee_x_axis = L_knee_x_axis/np.linalg.norm(L_knee_x_axis)
-        L_knee_y_axis = Laxis[1]
-        L_knee_y_axis = L_knee_y_axis/np.linalg.norm(L_knee_y_axis)
-        L_knee_z_axis = Laxis[2]
-        L_knee_z_axis = L_knee_z_axis/np.linalg.norm(L_knee_z_axis)
+        r_knee_x = r_axis[0]/np.linalg.norm(r_axis[0], axis=1)[:, np.newaxis] 
+        r_knee_y = r_axis[1]/np.linalg.norm(r_axis[1], axis=1)[:, np.newaxis]
+        r_knee_z = r_axis[2]/np.linalg.norm(r_axis[2], axis=1)[:, np.newaxis]
 
-        r_axis = np.zeros((4, 4))
-        r_axis[3, 3] = 1.0
-        r_axis[0, :3] = R_knee_x_axis
-        r_axis[1, :3] = R_knee_y_axis
-        r_axis[2, :3] = R_knee_z_axis
-        r_axis[:3, 3] = R
+        l_knee_x = l_axis[0]/np.linalg.norm(l_axis[0], axis=1)[:, np.newaxis]
+        l_knee_y = l_axis[1]/np.linalg.norm(l_axis[1], axis=1)[:, np.newaxis]
+        l_knee_z = l_axis[2]/np.linalg.norm(l_axis[2], axis=1)[:, np.newaxis]
 
-        l_axis = np.zeros((4, 4))
-        l_axis[3, 3] = 1.0
-        l_axis[0, :3] = L_knee_x_axis
-        l_axis[1, :3] = L_knee_y_axis
-        l_axis[2, :3] = L_knee_z_axis
-        l_axis[:3, 3] = L
+        num_frames = rthi.shape[0]
 
-        return np.asarray([r_axis, l_axis])
+        r_knee_axis = np.column_stack([r_knee_x, r_knee_y, r_knee_z, r_knee_o])
+        l_knee_axis = np.column_stack([l_knee_x, l_knee_y, l_knee_z, l_knee_o])
+
+        r_axis_matrix = r_knee_axis.reshape(num_frames, 4, 3).transpose(0, 2, 1)
+        l_axis_matrix = l_knee_axis.reshape(num_frames, 4, 3).transpose(0, 2, 1)
+
+        return np.asarray([r_axis_matrix, l_axis_matrix])
 
 
     def calc_axis_ankle(self, rtib, ltib, rank, lank, r_knee_JC, l_knee_JC, rank_width, lank_width, rtib_torsion, ltib_torsion):
@@ -2692,19 +2682,19 @@ class CalcUtils:
 
         # vec_3 is cross vector of vec_1, vec_2, and then it normalized.
         vec_3 = np.cross(vec_1, vec_2)
-        vec_3_div = np.linalg.norm(vec_3)
+        vec_3_div = np.linalg.norm(vec_3, axis=1)[:, np.newaxis]
         vec_3 = vec_3 / vec_3_div
 
         mid = (p_b + p_c) / 2.0
         length = np.subtract(p_b, mid)
-        length = np.linalg.norm(length)
+        length = np.linalg.norm(length, axis=1)
 
-        theta = math.acos(delta/np.linalg.norm(vec_2))
+        theta = np.arccos(delta/np.linalg.norm(vec_2, axis=1))
 
-        alpha = math.cos(theta*2)
-        beta = math.sin(theta*2)
+        alpha = np.cos(theta*2)
+        beta = np.sin(theta*2)
 
-        u_x, u_y, u_z = vec_3
+        u_x, u_y, u_z = (vec_3[:, 0], vec_3[:, 1], vec_3[:, 2])
 
         # This rotation matrix is called Rodriques' rotation formula.
         # In order to make a plane, at least 3 number of markers is required which
@@ -2712,16 +2702,18 @@ class CalcUtils:
         # then the orthogonal vector of the plane will be rotating axis.
         # joint center is determined by rotating the one vector of plane around rotating axis.
 
-        rot = np.matrix([ 
+        rot = np.array([ 
             [alpha+u_x**2.0*(1.0-alpha),   u_x*u_y*(1.0-alpha) - u_z*beta, u_x*u_z*(1.0-alpha)+u_y*beta],
             [u_y*u_x*(1.0-alpha)+u_z*beta, alpha+u_y**2.0 * (1.0-alpha),   u_y*u_z*(1.0-alpha)-u_x*beta],
             [u_z*u_x*(1.0-alpha)-u_y*beta, u_z*u_y*(1.0-alpha) + u_x*beta, alpha+u_z**2.0*(1.0-alpha)]
-        ])
+        ]).transpose(2, 0, 1)
 
-        r_vec = rot * (np.matrix(vec_2).transpose())
-        r_vec = r_vec * length/np.linalg.norm(r_vec)
+        num_frames = vec_2.shape[0]
+        vec_2 = vec_2.reshape(num_frames, 3, 1)
+        r_vec = rot @ vec_2
+        r_vec = r_vec * length[:, np.newaxis, np.newaxis] / np.linalg.norm(r_vec, axis=1)[:, np.newaxis]
 
-        r_vec = np.asarray(r_vec)[:3, 0]
+        r_vec = np.squeeze(r_vec, axis=2)
         joint_center = r_vec + mid
 
         return joint_center

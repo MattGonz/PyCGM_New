@@ -22,7 +22,7 @@ class ModelCreator():
         self.set_angle_functions()
 
         # HACK for testing since only a few functions are currently vectorized
-        self.axis_functions = self.axis_functions[:3]
+        self.axis_functions = self.axis_functions[:4]
 
         # map function names to indices: 'calc_pelvis_axis': 0 ...
         self.map_function_names_to_index()
@@ -285,12 +285,12 @@ class Model(ModelCreator):
 
                 end = time.time()
 
-                print(f"\t{trial_name[:10]}...\t{func.__name__}\t{end-start:.5f}s")
+                print(f"\t{trial_name:<20}\t{func.__name__:<25}\t{end-start:.5f}s")
 
         start = time.time()
         self.structure_model_output()
         end = time.time()
-        print(f'\tTime to structure model output:\t\t{end-start:.5f}s\n')
+        print(f'\tTime to structure output:\t\t\t\t{end-start:.5f}s\n')
 
 
     def structure_model_output(self):

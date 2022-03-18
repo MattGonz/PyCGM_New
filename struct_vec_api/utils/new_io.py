@@ -60,12 +60,12 @@ def loadDataNew(filename):
 
     num_markers = len(frames_list[0][0])
     num_frames = len(frames_list)
-    frame_numbers = np.arange(1, num_frames + 1)
+    frame_numbers = np.arange(num_frames)
 
     marker_positions = np.empty((num_markers, num_frames), dtype=(("4f8")))
     marker_xyz = [(key, (frame_dtype(), (num_frames,))) for key in marker_names]
 
-    float_arr = np.vstack(frames_list[:, 0]).astype(np.float).reshape(num_markers, num_frames, 3)
+    float_arr = np.column_stack(frames_list[:, 0]).astype(np.float).reshape(num_markers, num_frames, 3)
 
     marker_positions = np.insert(float_arr, 0, frame_numbers, axis=2)
     marker_positions.dtype = frame_dtype()

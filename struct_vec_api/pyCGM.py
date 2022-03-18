@@ -15,7 +15,6 @@ class ModelCreator():
         self.trial_names = self.data.dynamic.dtype.names
 
         self.measurement_keys          = list(self.data.static.measurements.dtype.names)
-        self.measurement_name_to_index = {measurement_key: index for index, measurement_key in enumerate(self.measurement_keys)}
 
         # add non-overridden default pycgm_calc funcs to funcs list
         self.set_axis_functions()
@@ -35,8 +34,6 @@ class ModelCreator():
         # e.g. ['Pelvis','RHipJC', 'LHipJC','Hip','RKnee', 'LKnee', ...]
         self.axis_keys           = list(chain.from_iterable(self.axis_function_to_return.values()))
         self.angle_keys          = list(chain.from_iterable(self.angle_function_to_return.values()))
-        self.axis_name_to_index  = { axis: index for index, axis in enumerate(self.axis_keys) }
-        self.angle_name_to_index = { angle: index for index, angle in enumerate(self.angle_keys) }
 
         self.set_axis_struct()
         self.set_angle_struct()
@@ -422,13 +419,11 @@ class Model(ModelCreator):
         # add returned axes, update related attributes
 
             self.axis_function_to_return[function] = returns_axes
-            self.axis_name_to_index                = {axis_name: index for index, axis_name in enumerate(self.axis_keys)}
 
         if returns_angles is not None:
         # add returned angles, update related attributes
 
             self.angle_function_to_return[function] = returns_angles
-            self.angle_name_to_index                = {angle_name: index for index, angle_name in enumerate(self.angle_keys)}
 
         self.update_trial_parameters()
 
@@ -477,7 +472,6 @@ class Model(ModelCreator):
             self.axis_keys.extend(returns_axes)
             self.map_function_names_to_index()
 
-            self.axis_name_to_index                = { axis_name: index for index, axis_name in enumerate(self.axis_keys) }
             self.axis_function_to_return[function] = returns_axes
             self.axis_func_parameter_names[self.axis_function_to_index[function]] = params
             self.set_axis_struct()
@@ -493,7 +487,6 @@ class Model(ModelCreator):
             self.map_function_names_to_index()
 
             self.angle_function_to_return[function] = returns_angles
-            self.angle_name_to_index                = {angle_name: index for index, angle_name in enumerate(self.angle_keys)}
             self.angle_func_parameter_names[self.angle_function_to_index[function]] = params
             self.set_angle_struct()
 

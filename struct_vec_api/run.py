@@ -1,4 +1,5 @@
-from pyCGM import PyCGM, Model
+from pyCGM import PyCGM
+from model import Model
 from custom_CGMs import Model_CustomPelvis, Model_NewFunction
 
 # Includes 59993 frame trial

@@ -1,4 +1,4 @@
-from pyCGM import Model
+from model import Model
 import numpy as np
 
 class Model_CustomPelvis(Model):

@@ -791,7 +791,7 @@ class Reader(Manager):
 
         self.check_metadata()
 
-    def read_frames(self, copy=True,onlyXYZ=False):
+    def read_frames(self, copy=True,onlyXYZ=False, yield_frame_no=True):
         '''Iterate over the data frames from our C3D file handle.
 
         Arguments
@@ -891,9 +891,15 @@ class Reader(Manager):
                 analog = (raw.astype(float) - offsets) * scales * gen_scale
 
             if copy:
-                yield frame_no, points.copy(), analog.copy()
+                if not yield_frame_no:
+                    yield points.copy(), analog.copy()
+                else:
+                    yield frame_no, points.copy(), analog.copy()
             else:
-                yield frame_no, points, analog
+                if not yield_frame_no:
+                    yield points
+                else:
+                    yield frame_no, points, analog
 
 
 class Writer(Manager):

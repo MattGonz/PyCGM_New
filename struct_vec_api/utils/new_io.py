@@ -56,22 +56,20 @@ def loadDataNew(filename):
     labels = reader.get('POINT:LABELS').string_array
     marker_names = [str(label.rstrip()) for label in labels]
 
-    frames = reader.read_frames(True, True)
+    frames_list = np.array(list(reader.read_frames(True, True, yield_frame_no=False)), dtype=object)
 
-    frames_list = list(frames)
-    num_markers = len(frames_list[0][1])
-
+    num_markers = len(frames_list[0][0])
     num_frames = len(frames_list)
+    frame_numbers = np.arange(1, num_frames + 1)
 
     marker_positions = np.empty((num_markers, num_frames), dtype=(("4f8")))
     marker_xyz = [(key, (frame_dtype(), (num_frames,))) for key in marker_names]
 
-    for i, points, _ in reader.read_frames(True, True):
-        i -= 1
-        points = np.insert(points, 0, i, axis=1)
-        marker_positions[:, i] = points
+    float_arr = np.vstack(frames_list[:, 0]).astype(np.float).reshape(num_markers, num_frames, 3)
 
+    marker_positions = np.insert(float_arr, 0, frame_numbers, axis=2)
     marker_positions.dtype = frame_dtype()
+
     dynamic_struct = np.empty((1), dtype=marker_xyz)
 
     for i, name in enumerate(dynamic_struct.dtype.names):

@@ -31,8 +31,8 @@ cgm.run_all()
 
 # Access output axes from the original model (matt)
 print(f"{matt.data.dynamic.RoboWalk.axes.Pelvis.shape=}")
-print(f"{matt.data.dynamic.RoboWalk.axes.RKnee.shape=}")
+print(f"{matt.data.dynamic.Sample_Dynamic.axes.RKnee.shape=}")
 
 # Access output axes from the model at index 2 (matt_custom)
-print(f"{cgm[2].data.dynamic.RoboWalk.axes.Eyeball.shape=}")
+print(f"{cgm[2].data.dynamic.RoboWalk.axes.REyeball.shape=}")
 

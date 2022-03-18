@@ -55,7 +55,8 @@ class Model_NewFunction(Model):
         super().__init__(static_trial, dynamic_trials, measurements)
         self.add_function('calc_axis_eyeball', measurements=["Bodymass", "ImaginaryMeasurement"],
                                                markers=["RASI", "LASI", "RPSI", "LPSI", "SACR"],
-                                               returns_axes=['Eyeball'])
+                                               returns_axes=['REyeball', 'LEyeball'],
+                                               order=['calc_axis_knee', -1])
 
     def calc_axis_eyeball(self, bodymass, imaginary_measurement, rasi, lasi, rpsi, lpsi, sacr):
         """
@@ -90,8 +91,8 @@ class Model_NewFunction(Model):
         z = np.cross(x, y)
 
         num_frames = rasi.shape[0]
-        pelvis_stack = np.column_stack([x,y,z,o])
-        pelvis_matrix = pelvis_stack.reshape(num_frames,4,3).transpose(0,2,1)
+        eyeball_stack = np.column_stack([x,y,z,o])
+        eyeball_matrix = eyeball_stack.reshape(num_frames,4,3).transpose(0,2,1)
 
-        return pelvis_matrix
+        return eyeball_matrix, eyeball_matrix
 

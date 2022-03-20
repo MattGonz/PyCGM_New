@@ -393,7 +393,7 @@ class CalcAxes():
         return np.asarray([r_axis_matrix, l_axis_matrix])
 
 
-    def calc_axis_ankle(self, rtib, ltib, rank, lank, r_knee_JC, l_knee_JC, rank_width, lank_width, rtib_torsion, ltib_torsion):
+    def calc_axis_ankle(self, rtib, ltib, rank, lank, r_knee_jc, l_knee_jc, rank_width, lank_width, rtib_torsion, ltib_torsion):
         """Calculate the ankle joint center and axis.
 
         Takes in markers that correspond to (x, y, z) positions of the current
@@ -472,134 +472,81 @@ class CalcAxes():
         """
         # Get Global Values
         mm = 7.0
-        R_delta = (rank_width/2.0)+mm
-        L_delta = (lank_width/2.0)+mm
-
-        # REQUIRED MARKERS:
-        # RTIB
-        # LTIB
-        # RANK
-        # LANK
-        # r_knee_JC
-        # l_knee_JC
+        r_delta = (rank_width/2.0) + mm
+        l_delta = (lank_width/2.0) + mm
+        r_knee_jc = r_knee_jc[:, :, 3]
+        l_knee_jc = l_knee_jc[:, :, 3]
 
         # This is Torsioned Tibia and this describe the ankle angles
         # Tibial frontal plane being defined by ANK,TIB and KJC
 
         # Determine the position of ankleJointCenter using calc_joint_center function
-        R = CalcUtils.calc_joint_center(rtib, r_knee_JC, rank, R_delta)
-        L = CalcUtils.calc_joint_center(ltib, l_knee_JC, lank, L_delta)
+        r_ankle_jc = CalcUtils.calc_joint_center(rtib, r_knee_jc, rank, r_delta)
+        l_ankle_jc = CalcUtils.calc_joint_center(ltib, l_knee_jc, lank, l_delta)
 
         # Ankle Axis Calculation(ref. Clinical Gait Analysis hand book, Baker2013)
         # Right axis calculation
 
         # Z axis is shank bone calculated by the ankleJC and  kneeJC
-        axis_z = r_knee_JC-R
+        axis_z = r_knee_jc - r_ankle_jc
 
         # X axis is perpendicular to the points plane which is determined by ANK,TIB and KJC markers.
         # and calculated by each point's vector cross vector.
         # tib_ank_R vector is making a tibia plane to be assumed as rigid segment.
-        tib_ank_R = rtib-rank
+        tib_ank_R = rtib - rank
         axis_x = np.cross(axis_z, tib_ank_R)
 
         # Y axis is determined by cross product of axis_z and axis_x.
         axis_y = np.cross(axis_z, axis_x)
 
-        Raxis = [axis_x, axis_y, axis_z]
+        r_axis = np.array([axis_x, axis_y, axis_z])
 
         # Left axis calculation
 
         # Z axis is shank bone calculated by the ankleJC and  kneeJC
-        axis_z = l_knee_JC-L
+        axis_z = l_knee_jc - l_ankle_jc
 
         # X axis is perpendicular to the points plane which is determined by ANK,TIB and KJC markers.
         # and calculated by each point's vector cross vector.
         # tib_ank_L vector is making a tibia plane to be assumed as rigid segment.
-        tib_ank_L = ltib-lank
+        tib_ank_L = ltib - lank
         axis_x = np.cross(tib_ank_L, axis_z)
 
         # Y axis is determined by cross product of axis_z and axis_x.
         axis_y = np.cross(axis_z, axis_x)
 
-        Laxis = [axis_x, axis_y, axis_z]
+        l_axis = np.array([axis_x, axis_y, axis_z])
 
         # Clear the name of axis and then normalize it.
-        R_ankle_x_axis = Raxis[0]
-        R_ankle_x_axis_div = np.linalg.norm(R_ankle_x_axis)
-        R_ankle_x_axis = [R_ankle_x_axis[0]/R_ankle_x_axis_div, R_ankle_x_axis[1] /
-                          R_ankle_x_axis_div, R_ankle_x_axis[2]/R_ankle_x_axis_div]
+        r_ankle_x = r_axis[0]/np.linalg.norm(r_axis[0], axis=1)[:, np.newaxis]
+        r_ankle_y = r_axis[1]/np.linalg.norm(r_axis[1], axis=1)[:, np.newaxis]
+        r_ankle_z = r_axis[2]/np.linalg.norm(r_axis[2], axis=1)[:, np.newaxis]
 
-        R_ankle_y_axis = Raxis[1]
-        R_ankle_y_axis_div = np.linalg.norm(R_ankle_y_axis)
-        R_ankle_y_axis = [R_ankle_y_axis[0]/R_ankle_y_axis_div, R_ankle_y_axis[1] /
-                          R_ankle_y_axis_div, R_ankle_y_axis[2]/R_ankle_y_axis_div]
-
-        R_ankle_z_axis = Raxis[2]
-        R_ankle_z_axis_div = np.linalg.norm(R_ankle_z_axis)
-        R_ankle_z_axis = [R_ankle_z_axis[0]/R_ankle_z_axis_div, R_ankle_z_axis[1] /
-                          R_ankle_z_axis_div, R_ankle_z_axis[2]/R_ankle_z_axis_div]
-
-        L_ankle_x_axis = Laxis[0]
-        L_ankle_x_axis_div = np.linalg.norm(L_ankle_x_axis)
-        L_ankle_x_axis = [L_ankle_x_axis[0]/L_ankle_x_axis_div, L_ankle_x_axis[1] /
-                          L_ankle_x_axis_div, L_ankle_x_axis[2]/L_ankle_x_axis_div]
-
-        L_ankle_y_axis = Laxis[1]
-        L_ankle_y_axis_div = np.linalg.norm(L_ankle_y_axis)
-        L_ankle_y_axis = [L_ankle_y_axis[0]/L_ankle_y_axis_div, L_ankle_y_axis[1] /
-                          L_ankle_y_axis_div, L_ankle_y_axis[2]/L_ankle_y_axis_div]
-
-        L_ankle_z_axis = Laxis[2]
-        L_ankle_z_axis_div = np.linalg.norm(L_ankle_z_axis)
-        L_ankle_z_axis = [L_ankle_z_axis[0]/L_ankle_z_axis_div, L_ankle_z_axis[1] /
-                          L_ankle_z_axis_div, L_ankle_z_axis[2]/L_ankle_z_axis_div]
+        l_ankle_x = l_axis[0]/np.linalg.norm(l_axis[0], axis=1)[:, np.newaxis]
+        l_ankle_y = l_axis[1]/np.linalg.norm(l_axis[1], axis=1)[:, np.newaxis]
+        l_ankle_z = l_axis[2]/np.linalg.norm(l_axis[2], axis=1)[:, np.newaxis]
 
         # Put both axis in array
-        Raxis = [R_ankle_x_axis, R_ankle_y_axis, R_ankle_z_axis]
-        Laxis = [L_ankle_x_axis, L_ankle_y_axis, L_ankle_z_axis]
+        r_axis = np.array([r_ankle_x, r_ankle_y, r_ankle_z])
+        l_axis = np.array([l_ankle_x, l_ankle_y, l_ankle_z])
+
 
         # Rotate the axes about the tibia torsion.
         rtib_torsion = np.radians(rtib_torsion)
         ltib_torsion = np.radians(ltib_torsion)
 
-        Raxis = [[math.cos(rtib_torsion)*Raxis[0][0]-math.sin(rtib_torsion)*Raxis[1][0],
-                  math.cos(rtib_torsion)*Raxis[0][1] -
-                  math.sin(rtib_torsion)*Raxis[1][1],
-                  math.cos(rtib_torsion)*Raxis[0][2]-math.sin(rtib_torsion)*Raxis[1][2]],
-                 [math.sin(rtib_torsion)*Raxis[0][0]+math.cos(rtib_torsion)*Raxis[1][0],
-                 math.sin(rtib_torsion)*Raxis[0][1] +
-                  math.cos(rtib_torsion)*Raxis[1][1],
-                 math.sin(rtib_torsion)*Raxis[0][2]+math.cos(rtib_torsion)*Raxis[1][2]],
-                 [Raxis[2][0], Raxis[2][1], Raxis[2][2]]]
+        r_axis_x, r_axis_y, r_axis_z = np.cos(rtib_torsion) * r_axis - np.sin(rtib_torsion) * r_axis
+        l_axis_x, l_axis_y, l_axis_z = np.cos(ltib_torsion) * l_axis - np.sin(ltib_torsion) * l_axis
 
-        Laxis = [[math.cos(ltib_torsion)*Laxis[0][0]-math.sin(ltib_torsion)*Laxis[1][0],
-                  math.cos(ltib_torsion)*Laxis[0][1] -
-                  math.sin(ltib_torsion)*Laxis[1][1],
-                  math.cos(ltib_torsion)*Laxis[0][2]-math.sin(ltib_torsion)*Laxis[1][2]],
-                 [math.sin(ltib_torsion)*Laxis[0][0]+math.cos(ltib_torsion)*Laxis[1][0],
-                 math.sin(ltib_torsion)*Laxis[0][1] +
-                  math.cos(ltib_torsion)*Laxis[1][1],
-                 math.sin(ltib_torsion)*Laxis[0][2]+math.cos(ltib_torsion)*Laxis[1][2]],
-                 [Laxis[2][0], Laxis[2][1], Laxis[2][2]]]
+        r_ankle_axis = np.column_stack([r_axis_x, r_axis_y, r_axis_z, r_ankle_jc])
+        l_ankle_axis = np.column_stack([l_axis_x, l_axis_y, l_axis_z, l_ankle_jc])
 
-        r_axis = np.zeros((4, 4))
-        r_axis[3, 3] = 1.0
-        r_axis[0, :3] = Raxis[0]
-        r_axis[1, :3] = Raxis[1]
-        r_axis[2, :3] = Raxis[2]
-        r_axis[:3, 3] = R
+        num_frames = rtib.shape[0]
+        r_axis_matrix = r_ankle_axis.reshape(num_frames, 4, 3).transpose(0, 2, 1)
+        l_axis_matrix = l_ankle_axis.reshape(num_frames, 4, 3).transpose(0, 2, 1)
 
-        l_axis = np.zeros((4, 4))
-        l_axis[3, 3] = 1.0
-        l_axis[0, :3] = Laxis[0]
-        l_axis[1, :3] = Laxis[1]
-        l_axis[2, :3] = Laxis[2]
-        l_axis[:3, 3] = L
 
-        # Both of axis in array.
-        axis = np.array([r_axis, l_axis])
-
-        return axis
+        return np.asarray([r_axis_matrix, l_axis_matrix])
 
 
     def calc_axis_foot(self, rtoe, ltoe, r_ankle_axis, l_ankle_axis, r_static_rot_off, l_static_rot_off, r_static_plant_flex, l_static_plant_flex):

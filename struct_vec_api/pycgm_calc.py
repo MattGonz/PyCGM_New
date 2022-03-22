@@ -932,7 +932,7 @@ class CalcAxes():
         return thorax_axis_matrix
 
 
-    def calc_joint_center_shoulder(self, rsho, lsho, thorax_axis, r_wand, l_wand, r_sho_off, l_sho_off):
+    def calc_joint_center_shoulder(self, rsho, lsho, thorax_axis, r_sho_off, l_sho_off):
         """Calculate the shoulder joint center.
 
         Takes in markers that correspond to (x, y, z) positions of the current
@@ -989,29 +989,35 @@ class CalcAxes():
         """
 
         thorax_axis = np.asarray(thorax_axis)
-        thorax_origin = thorax_axis[:3, 3]
+        thorax_origin = thorax_axis[:, :, 3]
 
         # Get Subject Measurement Values
         mm = 7.0
-        R_delta = (r_sho_off + mm)
-        L_delta = (l_sho_off + mm)
+        r_delta = (r_sho_off + mm)
+        l_delta = (l_sho_off + mm)
 
         # REQUIRED MARKERS:
         # RSHO
         # LSHO
 
-        R_Sho_JC = CalcUtils.calc_joint_center(r_wand, thorax_origin, rsho, R_delta)
-        L_Sho_JC = CalcUtils.calc_joint_center(l_wand, thorax_origin, lsho, L_delta)
+        r_wand, l_wand = CalcUtils.calc_marker_wand(rsho, lsho, thorax_axis)
+        r_sho_jc = CalcUtils.calc_joint_center(r_wand, thorax_origin, rsho, r_delta)
+        l_sho_jc = CalcUtils.calc_joint_center(l_wand, thorax_origin, lsho, l_delta)
 
-        r_sho_jc = np.identity(4)
-        r_sho_jc[:3, 3] = R_Sho_JC
+        num_frames = rsho.shape[0]
+        x = np.zeros((num_frames, 3))
+        y = np.zeros((num_frames, 3))
+        z = np.zeros((num_frames, 3))
+        o = r_sho_jc
 
-        l_sho_jc = np.identity(4)
-        l_sho_jc[:3, 3] = L_Sho_JC
+        right_stack = np.column_stack([x, y, z, o])
+        right_shoulder_jc_matrix = right_stack.reshape(num_frames, 4, 3).transpose(0,2,1)
 
-        shoulder_JC = np.array([r_sho_jc, l_sho_jc])
+        o = l_sho_jc
+        left_stack = np.column_stack([x, y, z, o])
+        left_shoulder_jc_matrix = left_stack.reshape(num_frames, 4, 3).transpose(0,2,1)
 
-        return shoulder_JC
+        return np.array([right_shoulder_jc_matrix, left_shoulder_jc_matrix])
 
 
     def calc_axis_shoulder(self, thorax_axis, r_sho_jc, l_sho_jc, r_wand, l_wand):
@@ -2644,26 +2650,24 @@ class CalcUtils:
          array([ 256.42,  364.27, 1460.61])]
         """
 
-        thorax_axis = np.asarray(thorax_axis)
-        thorax_origin = thorax_axis[:3, 3]
+        thorax_origin = thorax_axis[:, :, 3]
 
-        axis_x_vec = thorax_axis[0, :3]
-        axis_x_vec = axis_x_vec / np.linalg.norm(axis_x_vec)
+        axis_x_vec  = thorax_axis[:, :, 0]
+        axis_x_vec /= np.linalg.norm(axis_x_vec, axis=1)[:, np.newaxis]
 
-        # Calculate for getting a wand marker
+        r_sho_vec  = rsho - thorax_origin
+        r_sho_vec /= np.linalg.norm(r_sho_vec, axis=1)[:, np.newaxis]
 
-        RSHO_vec = rsho - thorax_origin
-        LSHO_vec = lsho - thorax_origin
-        RSHO_vec = RSHO_vec/np.linalg.norm(RSHO_vec)
-        LSHO_vec = LSHO_vec/np.linalg.norm(LSHO_vec)
+        l_sho_vec  = lsho - thorax_origin
+        l_sho_vec /= np.linalg.norm(l_sho_vec, axis=1)[:, np.newaxis]
 
-        r_wand = np.cross(RSHO_vec, axis_x_vec)
-        r_wand = r_wand/np.linalg.norm(r_wand)
-        r_wand = thorax_origin + r_wand
+        r_wand  = np.cross(r_sho_vec, axis_x_vec)
+        r_wand /= np.linalg.norm(r_wand, axis=1)[:, np.newaxis]
+        r_wand += thorax_origin
 
-        l_wand = np.cross(axis_x_vec, LSHO_vec)
-        l_wand = l_wand/np.linalg.norm(l_wand)
-        l_wand = thorax_origin + l_wand
+        l_wand  = np.cross(axis_x_vec, l_sho_vec)
+        l_wand /= np.linalg.norm(l_wand, axis=1)[:, np.newaxis]
+        l_wand += thorax_origin
 
         wand = np.array([r_wand, l_wand])
 

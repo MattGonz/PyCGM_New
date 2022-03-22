@@ -932,7 +932,84 @@ class CalcAxes():
         return thorax_axis_matrix
 
 
-    def calc_joint_center_shoulder(self, rsho, lsho, thorax_axis, r_sho_off, l_sho_off):
+    def calc_marker_wand(self, rsho, lsho, thorax_axis):
+        """Calculate the wand marker position.
+
+        Takes in markers that correspond to (x, y, z) positions of the current
+        frame, and the thorax axis.
+
+        Calculates the wand marker position.
+
+        Markers used: RSHO, LSHO
+
+        Other landmarks used: thorax axis
+
+        Parameters
+        ----------
+        rsho : array
+            1x3 RSHO marker
+        lsho : array
+            1x3 LSHO marker
+        thorax_axis : array
+            4x4 affine matrix with thorax (x, y, z) axes and origin.
+
+        Returns
+        -------
+        wand : array
+            A list of two 1x3 arrays representing the right and left wand markers.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> np.set_printoptions(suppress=True)
+        >>> from .pyCGM import calc_marker_wand
+        >>> rsho = np.array([428.88, 270.55, 1500.73])
+        >>> lsho = np.array([68.24, 269.01, 1510.10])
+        >>> thorax_axis = np.array([[ 0.09,  1.  ,  0.01,  256.14],
+        ...                         [ 1.  , -0.09, -0.07,  364.3 ],
+        ...                         [-0.06, -9.98, -1.  , 1459.65],
+        ...                         [ 0.  ,  0.  ,  0.  ,    1.  ]])
+        >>> [np.around(arr, 2) for arr in calc_marker_wand(rsho, lsho, thorax_axis)] #doctest: +NORMALIZE_WHITESPACE
+        [array([ 255.91,  364.31, 1460.62]),
+         array([ 256.42,  364.27, 1460.61])]
+        """
+
+        thorax_origin = thorax_axis[:, :, 3]
+
+        axis_x_vec  = thorax_axis[:, :, 0]
+        axis_x_vec /= np.linalg.norm(axis_x_vec, axis=1)[:, np.newaxis]
+
+        r_sho_vec  = rsho - thorax_origin
+        r_sho_vec /= np.linalg.norm(r_sho_vec, axis=1)[:, np.newaxis]
+
+        l_sho_vec  = lsho - thorax_origin
+        l_sho_vec /= np.linalg.norm(l_sho_vec, axis=1)[:, np.newaxis]
+
+        r_wand  = np.cross(r_sho_vec, axis_x_vec)
+        r_wand /= np.linalg.norm(r_wand, axis=1)[:, np.newaxis]
+        r_wand += thorax_origin
+
+        l_wand  = np.cross(axis_x_vec, l_sho_vec)
+        l_wand /= np.linalg.norm(l_wand, axis=1)[:, np.newaxis]
+        l_wand += thorax_origin
+
+        num_frames = rsho.shape[0]
+        x = np.zeros((num_frames, 3))
+        y = np.zeros((num_frames, 3))
+        z = np.zeros((num_frames, 3))
+        o = r_wand
+
+        right_stack = np.column_stack([x, y, z, o])
+        right_wand_matrix = right_stack.reshape(num_frames, 4, 3).transpose(0, 2, 1)
+
+        o = l_wand
+        left_stack = np.column_stack([x, y, z, o])
+        left_wand_matrix = left_stack.reshape(num_frames, 4, 3).transpose(0, 2, 1)
+
+        return np.array([right_wand_matrix, left_wand_matrix])
+
+
+    def calc_joint_center_shoulder(self, rsho, lsho, r_wand, l_wand, thorax_axis, r_sho_off, l_sho_off):
         """Calculate the shoulder joint center.
 
         Takes in markers that correspond to (x, y, z) positions of the current
@@ -991,6 +1068,9 @@ class CalcAxes():
         thorax_axis = np.asarray(thorax_axis)
         thorax_origin = thorax_axis[:, :, 3]
 
+        r_wand = r_wand[:, :, 3]
+        l_wand = l_wand[:, :, 3]
+
         # Get Subject Measurement Values
         mm = 7.0
         r_delta = (r_sho_off + mm)
@@ -1000,7 +1080,6 @@ class CalcAxes():
         # RSHO
         # LSHO
 
-        r_wand, l_wand = CalcUtils.calc_marker_wand(rsho, lsho, thorax_axis)
         r_sho_jc = CalcUtils.calc_joint_center(r_wand, thorax_origin, rsho, r_delta)
         l_sho_jc = CalcUtils.calc_joint_center(l_wand, thorax_origin, lsho, l_delta)
 
@@ -2607,69 +2686,4 @@ class CalcUtils:
 
         return joint_center
 
-    @staticmethod
-    def calc_marker_wand(rsho, lsho, thorax_axis):
-        """Calculate the wand marker position.
-
-        Takes in markers that correspond to (x, y, z) positions of the current
-        frame, and the thorax axis.
-
-        Calculates the wand marker position.
-
-        Markers used: RSHO, LSHO
-
-        Other landmarks used: thorax axis
-
-        Parameters
-        ----------
-        rsho : array
-            1x3 RSHO marker
-        lsho : array
-            1x3 LSHO marker
-        thorax_axis : array
-            4x4 affine matrix with thorax (x, y, z) axes and origin.
-
-        Returns
-        -------
-        wand : array
-            A list of two 1x3 arrays representing the right and left wand markers.
-
-        Examples
-        --------
-        >>> import numpy as np
-        >>> np.set_printoptions(suppress=True)
-        >>> from .pyCGM import calc_marker_wand
-        >>> rsho = np.array([428.88, 270.55, 1500.73])
-        >>> lsho = np.array([68.24, 269.01, 1510.10])
-        >>> thorax_axis = np.array([[ 0.09,  1.  ,  0.01,  256.14],
-        ...                         [ 1.  , -0.09, -0.07,  364.3 ],
-        ...                         [-0.06, -9.98, -1.  , 1459.65],
-        ...                         [ 0.  ,  0.  ,  0.  ,    1.  ]])
-        >>> [np.around(arr, 2) for arr in calc_marker_wand(rsho, lsho, thorax_axis)] #doctest: +NORMALIZE_WHITESPACE
-        [array([ 255.91,  364.31, 1460.62]),
-         array([ 256.42,  364.27, 1460.61])]
-        """
-
-        thorax_origin = thorax_axis[:, :, 3]
-
-        axis_x_vec  = thorax_axis[:, :, 0]
-        axis_x_vec /= np.linalg.norm(axis_x_vec, axis=1)[:, np.newaxis]
-
-        r_sho_vec  = rsho - thorax_origin
-        r_sho_vec /= np.linalg.norm(r_sho_vec, axis=1)[:, np.newaxis]
-
-        l_sho_vec  = lsho - thorax_origin
-        l_sho_vec /= np.linalg.norm(l_sho_vec, axis=1)[:, np.newaxis]
-
-        r_wand  = np.cross(r_sho_vec, axis_x_vec)
-        r_wand /= np.linalg.norm(r_wand, axis=1)[:, np.newaxis]
-        r_wand += thorax_origin
-
-        l_wand  = np.cross(axis_x_vec, l_sho_vec)
-        l_wand /= np.linalg.norm(l_wand, axis=1)[:, np.newaxis]
-        l_wand += thorax_origin
-
-        wand = np.array([r_wand, l_wand])
-
-        return wand
 

@@ -9,7 +9,7 @@ class CalcAxes():
         self.funcs = [self.calc_axis_pelvis, self.calc_joint_center_hip,
                       self.calc_axis_hip, self.calc_axis_knee, self.calc_axis_ankle,
                       self.calc_axis_foot, self.calc_axis_head, self.calc_axis_thorax,
-                      self.calc_joint_center_shoulder, self.calc_axis_shoulder,
+                      self.calc_marker_wand, self.calc_joint_center_shoulder, self.calc_axis_shoulder,
                       self.calc_axis_elbow, self.calc_axis_wrist, self.calc_axis_hand]
 
     def calc_axis_pelvis(self, rasi, lasi, rpsi, lpsi, sacr=None):
@@ -1009,7 +1009,7 @@ class CalcAxes():
         return np.array([right_wand_matrix, left_wand_matrix])
 
 
-    def calc_joint_center_shoulder(self, rsho, lsho, r_wand, l_wand, thorax_axis, r_sho_off, l_sho_off):
+    def calc_joint_center_shoulder(self, rsho, lsho, thorax_axis, r_wand, l_wand, r_sho_off, l_sho_off):
         """Calculate the shoulder joint center.
 
         Takes in markers that correspond to (x, y, z) positions of the current
@@ -1156,72 +1156,55 @@ class CalcAxes():
                 [   0.  ,    0.  ,    0.  ,    1.  ]])]
         """
 
-        thorax_axis = np.asarray(thorax_axis)
-        r_sho_jc = np.asarray(r_sho_jc)
-        l_sho_jc = np.asarray(l_sho_jc)
+        r_sho_jc = r_sho_jc[:, :, 3]
+        l_sho_jc = l_sho_jc[:, :, 3]
 
-        thorax_origin = thorax_axis[:3, 3]
+        r_wand = r_wand[:, :, 3]
+        l_wand = l_wand[:, :, 3]
 
-        R_shoulderJC = r_sho_jc[:3, 3]
-        L_shoulderJC = l_sho_jc[:3, 3]
+        thorax_origin = thorax_axis[:, :, 3]
 
-        R_wand = r_wand
-        L_wand = l_wand
-
-        R_wand_direc = R_wand - thorax_origin
-        L_wand_direc = L_wand - thorax_origin
-        R_wand_direc = R_wand_direc/np.linalg.norm(R_wand_direc)
-        L_wand_direc = L_wand_direc/np.linalg.norm(L_wand_direc)
+        r_wand_direc  = r_wand - thorax_origin
+        l_wand_direc  = l_wand - thorax_origin
+        r_wand_direc /= np.linalg.norm(r_wand_direc, axis=1)[:, np.newaxis]
+        l_wand_direc /= np.linalg.norm(l_wand_direc, axis=1)[:, np.newaxis]
 
         # Right
 
         # Get the direction of the primary axis Z,X,Y
-        z_direc = thorax_origin - R_shoulderJC
-        z_direc = z_direc/np.linalg.norm(z_direc)
-        y_direc = R_wand_direc * -1
-        x_direc = np.cross(y_direc, z_direc)
-        x_direc = x_direc/np.linalg.norm(x_direc)
-        y_direc = np.cross(z_direc, x_direc)
-        y_direc = y_direc/np.linalg.norm(y_direc)
+        z_direc  = thorax_origin - r_sho_jc
+        z_direc /= np.linalg.norm(z_direc, axis=1)[:, np.newaxis]
 
-        # backwards to account for marker size
-        x_axis = x_direc
-        y_axis = y_direc
-        z_axis = z_direc
+        y_direc = r_wand_direc * -1
+        x_direc  = np.cross(y_direc, z_direc)
+        x_direc /= np.linalg.norm(x_direc, axis=1)[:, np.newaxis]
 
-        r_sho = np.zeros((4, 4))
-        r_sho[3, 3] = 1.0
-        r_sho[0, :3] = x_axis
-        r_sho[1, :3] = y_axis
-        r_sho[2, :3] = z_axis
-        r_sho[:3, 3] = R_shoulderJC
+        y_direc  = np.cross(z_direc, x_direc)
+        y_direc /= np.linalg.norm(y_direc, axis=1)[:, np.newaxis]
+
+        right_stack = np.column_stack([x_direc, y_direc, z_direc, r_sho_jc])
 
         # Left
 
         # Get the direction of the primary axis Z,X,Y
-        z_direc = thorax_origin - L_shoulderJC
-        z_direc = z_direc/np.linalg.norm(z_direc)
-        y_direc = L_wand_direc
-        x_direc = np.cross(y_direc, z_direc)
-        x_direc = x_direc/np.linalg.norm(x_direc)
-        y_direc = np.cross(z_direc, x_direc)
-        y_direc = y_direc/np.linalg.norm(y_direc)
+        z_direc  = thorax_origin - l_sho_jc
+        z_direc /= np.linalg.norm(z_direc, axis=1)[:, np.newaxis]
 
-        # backwards to account for marker size
-        x_axis = x_direc
-        y_axis = y_direc
-        z_axis = z_direc
+        y_direc  = l_wand_direc
+        x_direc  = np.cross(y_direc, z_direc)
+        x_direc /= np.linalg.norm(x_direc, axis=1)[:, np.newaxis]
 
-        l_sho = np.zeros((4, 4))
-        l_sho[3, 3] = 1.0
-        l_sho[0, :3] = x_axis
-        l_sho[1, :3] = y_axis
-        l_sho[2, :3] = z_axis
-        l_sho[:3, 3] = L_shoulderJC
+        y_direc  = np.cross(z_direc, x_direc)
+        y_direc /= np.linalg.norm(y_direc, axis=1)[:, np.newaxis]
 
-        shoulder = np.array([r_sho, l_sho])
+        left_stack = np.column_stack([x_direc, y_direc, z_direc, l_sho_jc])
 
-        return shoulder
+        num_frames = thorax_axis.shape[0]
+
+        right_shoulder_axis_matrix = right_stack.reshape(num_frames, 4, 3).transpose(0, 2, 1)
+        left_shoulder_axis_matrix = left_stack.reshape(num_frames, 4, 3).transpose(0, 2, 1)
+
+        return np.array([right_shoulder_axis_matrix, left_shoulder_axis_matrix])
 
 
     def calc_axis_elbow(self, relb, lelb, rwra, rwrb, lwra, lwrb, r_shoulder_jc, l_shoulder_jc, r_elbow_width, l_elbow_width, r_wrist_width, l_wrist_width, mm):

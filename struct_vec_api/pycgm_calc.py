@@ -791,7 +791,7 @@ class CalcAxes():
 
         head_offset = -1*head_offset
 
-        # get the midpoints of the head to define the sides
+        # Get the midpoints of the head to define the sides
         front = (lfhd + rfhd)/2.0
         back = (lbhd + rbhd)/2.0
         left = (lfhd + lbhd)/2.0
@@ -799,52 +799,35 @@ class CalcAxes():
 
         # Get the vectors from the sides with primary x axis facing front
         # First get the x direction
-        x_axis = np.subtract(front, back)
-        x_axis_norm = np.nan_to_num(np.linalg.norm(x_axis))
-        if x_axis_norm:
-            x_axis = np.divide(x_axis, x_axis_norm)
+        x_axis  = np.subtract(front, back)
+        x_axis /= np.linalg.norm(x_axis, axis=1)[:, np.newaxis]
 
-        # get the direction of the y axis
-        y_axis = np.subtract(left, right)
-        y_axis_norm = np.nan_to_num(np.linalg.norm(y_axis))
-        if y_axis_norm:
-            y_axis = np.divide(y_axis, y_axis_norm)
+        # Get the direction of the y axis
+        y_axis  = np.subtract(left, right)
+        y_axis /= np.linalg.norm(y_axis, axis=1)[:, np.newaxis]
 
-        # get z axis by cross-product of x axis and y axis.
-        z_axis = np.cross(x_axis, y_axis)
-        z_axis_norm = np.nan_to_num(np.linalg.norm(z_axis))
-        if z_axis_norm:
-            z_axis = np.divide(z_axis, z_axis_norm)
+        # Get z axis by cross-product of x axis and y axis.
+        z_axis  = np.cross(x_axis, y_axis)
+        z_axis /= np.linalg.norm(z_axis, axis=1)[:, np.newaxis]
 
-        # make sure all x,y,z axis is orthogonal each other by cross-product
-        y_axis = np.cross(z_axis, x_axis)
-        y_axis_norm = np.nan_to_num(np.linalg.norm(y_axis))
-        if y_axis_norm:
-            y_axis = np.divide(y_axis, y_axis_norm)
+        # Make sure all x,y,z axis is orthogonal each other by cross-product
+        y_axis  = np.cross(z_axis, x_axis)
+        y_axis /= np.linalg.norm(y_axis, axis=1)[:, np.newaxis]
 
-        x_axis = np.cross(y_axis, z_axis)
-        x_axis_norm = np.nan_to_num(np.linalg.norm(x_axis))
-        if x_axis_norm:
-            x_axis = np.divide(x_axis, x_axis_norm)
+        x_axis  = np.cross(y_axis, z_axis)
+        x_axis /= np.linalg.norm(x_axis, axis=1)[:, np.newaxis]
 
-# rotate the head axis around y axis about head offset angle.
-        x_axis_rot = [x_axis[0]*math.cos(head_offset)+z_axis[0]*math.sin(head_offset),
-                x_axis[1]*math.cos(head_offset)+z_axis[1]*math.sin(head_offset),
-                x_axis[2]*math.cos(head_offset)+z_axis[2]*math.sin(head_offset)]
-        y_axis_rot = [y_axis[0],y_axis[1],y_axis[2]]
-        z_axis_rot = [x_axis[0]*-1*math.sin(head_offset)+z_axis[0]*math.cos(head_offset),
-                x_axis[1]*-1*math.sin(head_offset)+z_axis[1]*math.cos(head_offset),
-                x_axis[2]*-1*math.sin(head_offset)+z_axis[2]*math.cos(head_offset)]
+        # Rotate the head axis around y axis about head offset angle.
+        x_axis_rot = np.array(x_axis*np.cos(head_offset)+z_axis*np.sin(head_offset))
+        y_axis_rot = np.array(y_axis)
+        z_axis_rot = np.array(x_axis*-1*np.sin(head_offset)+z_axis*np.cos(head_offset))
 
-        # Create the return matrix
-        head_axis = np.zeros((4, 4))
-        head_axis[3, 3] = 1.0
-        head_axis[0, :3] = x_axis_rot
-        head_axis[1, :3] = y_axis_rot
-        head_axis[2, :3] = z_axis_rot
-        head_axis[:3, 3] = front
+        head_axis = np.column_stack([x_axis_rot, y_axis_rot, z_axis_rot, front])
 
-        return head_axis
+        num_frames = lfhd.shape[0]
+        head_axis_matrix = head_axis.reshape(num_frames, 4, 3).transpose(0, 2, 1)
+
+        return head_axis_matrix
 
 
     def calc_axis_thorax(self, clav, c7, strn, t10):

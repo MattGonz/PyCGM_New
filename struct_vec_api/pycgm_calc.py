@@ -632,12 +632,10 @@ class CalcAxes():
         # Ankle joint center
         # Ankle flexion axis
 
-        rtoe, ltoe, r_ankle_axis, l_ankle_axis = map(np.asarray, [rtoe, ltoe, r_ankle_axis, l_ankle_axis])
-
-        ankle_JC_R      = r_ankle_axis[:3, 3]
-        ankle_JC_L      = l_ankle_axis[:3, 3]
-        ankle_flexion_R = r_ankle_axis[1, :3] + ankle_JC_R
-        ankle_flexion_L = l_ankle_axis[1, :3] + ankle_JC_L
+        r_ankle_jc      = r_ankle_axis[:, :, 3]
+        l_ankle_jc      = l_ankle_axis[:, :, 3]
+        r_ankle_flexion = r_ankle_axis[:, :, 1] + r_ankle_jc
+        l_ankle_flexion = l_ankle_axis[:, :, 1] + l_ankle_jc
 
         # Toe axis's origin is marker position of TOE
         right_origin = rtoe
@@ -646,139 +644,100 @@ class CalcAxes():
         # Right
 
         # Z-axis is from TOE marker to AJC, then normalized
-        R_axis_z     = ankle_JC_R - rtoe
-        R_axis_z_div = np.linalg.norm(R_axis_z)
-        R_axis_z     = np.divide(R_axis_z, R_axis_z_div)
+        r_axis_z  = (r_ankle_jc - rtoe)
+        r_axis_z /= np.linalg.norm(r_axis_z, axis=1)[:, np.newaxis]
 
         # Bring the flexion axis of ankle axes from AnkleJointCenter function, then normalize it
-        y_flex_R     = ankle_flexion_R - ankle_JC_R
-        y_flex_R_div = np.linalg.norm(y_flex_R)
-        y_flex_R     = y_flex_R/y_flex_R_div
+        y_flex_r  = r_ankle_flexion - r_ankle_jc
+        y_flex_r /= np.linalg.norm(y_flex_r, axis=1)[:, np.newaxis]
 
         # X-axis is calculated as a cross product of z-axis and ankle flexion axis
-        R_axis_x     = np.cross(y_flex_R, R_axis_z)
-        R_axis_x_div = np.linalg.norm(R_axis_x)
-        R_axis_x     = np.divide(R_axis_x, R_axis_x_div)
+        r_axis_x  = np.cross(y_flex_r, r_axis_z)
+        r_axis_x /= np.linalg.norm(r_axis_x, axis=1)[:, np.newaxis]
 
         # Y-axis is then perpendicularly calculated from z-axis and x-axis, then normalized
-        R_axis_y     = np.cross(R_axis_z, R_axis_x)
-        R_axis_y_div = np.linalg.norm(R_axis_y)
-        R_axis_y     = np.divide(R_axis_y, R_axis_y_div)
+        r_axis_y  = np.cross(r_axis_z, r_axis_x)
+        r_axis_y /= np.linalg.norm(r_axis_y, axis=1)[:, np.newaxis]
 
-        R_foot_axis  = [R_axis_x, R_axis_y, R_axis_z]
+        r_foot_axis  = np.array([r_axis_x, r_axis_y, r_axis_z])
 
         # Left
 
         # Z-axis is from TOE marker to AJC, then normalized
-        L_axis_z     = ankle_JC_L - ltoe
-        L_axis_z_div = np.linalg.norm(L_axis_z)
-        L_axis_z     = np.divide(L_axis_z, L_axis_z_div)
+        l_axis_z  = l_ankle_jc - ltoe
+        l_axis_z /= np.linalg.norm(l_axis_z, axis=1)[:, np.newaxis]
 
         # Bring the flexion axis of ankle axes from AnkleJointCenter function, then normalize it
-        y_flex_L     = ankle_flexion_L - ankle_JC_L
-        y_flex_L_div = np.linalg.norm(y_flex_L)
-        y_flex_L     = np.divide(y_flex_L, y_flex_L_div)
+        y_flex_L  = l_ankle_flexion - l_ankle_jc
+        y_flex_L /= np.linalg.norm(y_flex_L, axis=1)[:, np.newaxis]
 
         # X-axis is calculated as a cross product of z-axis and ankle flexion axis
-        L_axis_x     = np.cross(y_flex_L, L_axis_z)
-        L_axis_x_div = np.linalg.norm(L_axis_x)
-        L_axis_x     = np.divide(L_axis_x, L_axis_x_div)
+        l_axis_x  = np.cross(y_flex_L, l_axis_z)
+        l_axis_x /= np.linalg.norm(l_axis_x, axis=1)[:, np.newaxis]
 
         # Y-axis is then perpendicularly calculated from z-axis and x-axis, then normalized
-        L_axis_y     = np.cross(L_axis_z, L_axis_x)
-        L_axis_y_div = np.linalg.norm(L_axis_y)
-        L_axis_y     = np.divide(L_axis_y, L_axis_y_div)
+        l_axis_y  = np.cross(l_axis_z, l_axis_x)
+        l_axis_y /= np.linalg.norm(l_axis_y, axis=1)[:, np.newaxis]
 
-        L_foot_axis  = [L_axis_x, L_axis_y, L_axis_z]
-
-        foot_axis    = [R_foot_axis, L_foot_axis]
+        l_foot_axis  = np.array([l_axis_x, l_axis_y, l_axis_z])
 
         # Apply static offset angle to the incorrect foot axes
 
         # Static offset angles are taken from static_info variable in radians
-        R_alpha = r_static_rot_off
-        R_beta  = r_static_plant_flex
-        L_alpha = l_static_rot_off
-        L_beta  = l_static_plant_flex
+        r_alpha = r_static_rot_off
+        r_beta  = r_static_plant_flex
+        l_alpha = l_static_rot_off
+        l_beta  = l_static_plant_flex
 
-        R_alpha = np.around(math.degrees(R_alpha), decimals=5)
-        R_beta  = np.around(math.degrees(R_beta), decimals=5)
-        L_alpha = np.around(math.degrees(L_alpha), decimals=5)
-        L_beta  = np.around(math.degrees(L_beta), decimals=5)
+        r_alpha = np.around(np.degrees(r_alpha), decimals=5)
+        r_beta  = np.around(np.degrees(r_beta), decimals=5)
+        l_alpha = np.around(np.degrees(l_alpha), decimals=5)
+        l_beta  = np.around(np.degrees(l_beta), decimals=5)
 
-        R_alpha = -math.radians(R_alpha)
-        R_beta  = math.radians(R_beta)
-        L_alpha = math.radians(L_alpha)
-        L_beta  = math.radians(L_beta)
-
-        R_axis = R_foot_axis
-        L_axis = L_foot_axis
+        r_alpha = -np.radians(r_alpha)
+        r_beta  = np.radians(r_beta)
+        l_alpha = np.radians(l_alpha)
+        l_beta  = np.radians(l_beta)
 
         # First, rotate incorrect foot axis around y-axis
 
         # Right
-        R_rotmat = [
-                        [(math.cos(R_beta) * R_axis[0][0] + math.sin(R_beta) * R_axis[2][0]),
-                         (math.cos(R_beta) * R_axis[0][1] + math.sin(R_beta) * R_axis[2][1]),
-                         (math.cos(R_beta) * R_axis[0][2] + math.sin(R_beta) * R_axis[2][2])],
-                         [R_axis[1][0], R_axis[1][1], R_axis[1][2]],
-                        [(-1 * math.sin(R_beta) * R_axis[0][0] + math.cos(R_beta) * R_axis[2][0]),
-                         (-1 * math.sin(R_beta) * R_axis[0][1] + math.cos(R_beta) * R_axis[2][1]),
-                         (-1 * math.sin(R_beta) * R_axis[0][2] + math.cos(R_beta) * R_axis[2][2])]
-                   ]
+        r_rotmat = np.array([
+                        np.cos(r_beta) * r_foot_axis[0] + np.sin(r_beta) * r_foot_axis[2],
+                        r_foot_axis[1],
+                        -1 * np.sin(r_beta) * r_foot_axis[0] + np.cos(r_beta) * r_foot_axis[2]
+                   ])
         # Left
-        L_rotmat = [
-                        [(math.cos(L_beta) * L_axis[0][0] + math.sin(L_beta) * L_axis[2][0]),
-                         (math.cos(L_beta) * L_axis[0][1] + math.sin(L_beta) * L_axis[2][1]),
-                         (math.cos(L_beta) * L_axis[0][2] + math.sin(L_beta) * L_axis[2][2])],
-                         [L_axis[1][0], L_axis[1][1], L_axis[1][2]],
-                        [(-1 * math.sin(L_beta) * L_axis[0][0] + math.cos(L_beta) * L_axis[2][0]),
-                         (-1 * math.sin(L_beta) * L_axis[0][1] + math.cos(L_beta) * L_axis[2][1]),
-                         (-1 * math.sin(L_beta) * L_axis[0][2] + math.cos(L_beta) * L_axis[2][2])]
-                   ]
+        l_rotmat = np.array([
+                        np.cos(l_beta) * l_foot_axis[0] + np.sin(l_beta) * l_foot_axis[2],
+                        l_foot_axis[1],
+                        -1 * np.sin(l_beta) * l_foot_axis[0] + np.cos(l_beta) * l_foot_axis[2]
+                   ])
 
         # Next, rotate incorrect foot axis around x-axis
 
         # Right
-        right_axis = np.asarray([[R_rotmat[0][0], R_rotmat[0][1], R_rotmat[0][2]],
-                                 [
-                                     (math.cos(R_alpha) * R_rotmat[1][0] - math.sin(R_alpha) * R_rotmat[2][0]),
-                                     (math.cos(R_alpha) * R_rotmat[1][1] - math.sin(R_alpha) * R_rotmat[2][1]),
-                                     (math.cos(R_alpha) * R_rotmat[1][2] - math.sin(R_alpha) * R_rotmat[2][2])
-                                 ],
-                                 [
-                                     (math.sin(R_alpha) * R_rotmat[1][0] + math.cos(R_alpha) * R_rotmat[2][0]),
-                                     (math.sin(R_alpha) * R_rotmat[1][1] + math.cos(R_alpha) * R_rotmat[2][1]),
-                                     (math.sin(R_alpha) * R_rotmat[1][2] + math.cos(R_alpha) * R_rotmat[2][2])
-                                ]])
+        right_axis = np.array([
+                              r_rotmat[0],
+                              np.cos(r_alpha) * r_rotmat[1] - np.sin(r_alpha) * r_rotmat[2],
+                              np.sin(r_alpha) * r_rotmat[1] + np.cos(r_alpha) * r_rotmat[2]
+                     ])
 
         # Left
-        left_axis = np.asarray([[L_rotmat[0][0], L_rotmat[0][1], L_rotmat[0][2]],
-                                [
-                                    (math.cos(L_alpha) * L_rotmat[1][0] - math.sin(L_alpha) * L_rotmat[2][0]),
-                                    (math.cos(L_alpha) * L_rotmat[1][1] - math.sin(L_alpha) * L_rotmat[2][1]),
-                                    (math.cos(L_alpha) * L_rotmat[1][2] - math.sin(L_alpha) * L_rotmat[2][2])
-                                ],
-                                [
-                                    (math.sin(L_alpha) * L_rotmat[1][0] + math.cos(L_alpha) * L_rotmat[2][0]),
-                                    (math.sin(L_alpha) * L_rotmat[1][1] + math.cos(L_alpha) * L_rotmat[2][1]),
-                                    (math.sin(L_alpha) * L_rotmat[1][2] + math.cos(L_alpha) * L_rotmat[2][2])
-                                ]])
+        left_axis = np.array([
+                              l_rotmat[0],
+                              np.cos(l_alpha) * l_rotmat[1] - np.sin(l_alpha) * l_rotmat[2],
+                              np.sin(l_alpha) * l_rotmat[1] + np.cos(l_alpha) * l_rotmat[2]
+                     ])
 
-        # Attach each axis to the origin
-        r_foot_axis = np.zeros((4, 4))
-        r_foot_axis[3, 3] = 1.0
-        r_foot_axis[:3, :3] = right_axis
-        r_foot_axis[:3, 3] = right_origin
+        r_foot_axis = np.column_stack([right_axis[0], right_axis[1], right_axis[2], right_origin])
+        l_foot_axis = np.column_stack([left_axis[0], left_axis[1], left_axis[2], left_origin])
 
-        l_foot_axis = np.zeros((4, 4))
-        l_foot_axis[3, 3] = 1.0
-        l_foot_axis[:3, :3] = left_axis
-        l_foot_axis[:3, 3] = left_origin
+        num_frames = right_origin.shape[0]
+        r_axis_matrix = r_foot_axis.reshape(num_frames, 4, 3).transpose(0, 2, 1)
+        l_axis_matrix = l_foot_axis.reshape(num_frames, 4, 3).transpose(0, 2, 1)
 
-        foot_axis = np.array([r_foot_axis, l_foot_axis])
-
-        return foot_axis
+        return [r_axis_matrix, l_axis_matrix]
 
 # Upperbody Coordinate System
 

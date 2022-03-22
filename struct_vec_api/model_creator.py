@@ -17,7 +17,7 @@ class ModelCreator():
         self.angle_functions = self.get_angle_functions()
 
         # HACK for testing since only a few functions are currently vectorized
-        self.axis_functions = self.axis_functions[:7]
+        self.axis_functions = self.axis_functions[:8]
 
         # Map function names to indices: 'calc_pelvis_axis': 0 ...
         self.axis_execution_order, self.angle_execution_order = self.map_function_names_to_index()

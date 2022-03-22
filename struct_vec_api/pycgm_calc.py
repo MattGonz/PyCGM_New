@@ -893,8 +893,6 @@ class CalcAxes():
           array([0.,    0.,    0.,      1.])]
         """
 
-        clav, c7, strn, t10 = map(np.asarray, [clav, c7, strn, t10])
-
         # Set or get a marker size as mm
         marker_size = (14.0) / 2.0
 
@@ -906,19 +904,19 @@ class CalcAxes():
 
         # Get the direction of the primary axis Z (facing down)
         z_direc = lower - upper
-        z = z_direc/np.linalg.norm(z_direc)
+        z = z_direc/np.linalg.norm(z_direc, axis=1)[:, np.newaxis]
 
         # The secondary axis X is from back to front
         x_direc = front - back
-        x = x_direc/np.linalg.norm(x_direc)
+        x = x_direc/np.linalg.norm(x_direc, axis=1)[:, np.newaxis]
 
         # make sure all the axes are orthogonal to each other by cross-product
         y_direc = np.cross(z, x)
-        y = y_direc/np.linalg.norm(y_direc)
+        y = y_direc/np.linalg.norm(y_direc, axis=1)[:, np.newaxis]
         x_direc = np.cross(y, z)
-        x = x_direc/np.linalg.norm(x_direc)
+        x = x_direc/np.linalg.norm(x_direc, axis=1)[:, np.newaxis]
         z_direc = np.cross(x, y)
-        z = z_direc/np.linalg.norm(z_direc)
+        z = z_direc/np.linalg.norm(z_direc, axis=1)[:, np.newaxis]
 
         # move the axes about offset along the x axis.
         offset = x * marker_size
@@ -926,16 +924,12 @@ class CalcAxes():
         # Add the CLAV back to the vector to get it in the right position before translating it
         o = clav - offset
 
-        thorax = np.zeros((4, 4))
-        thorax[3, 3] = 1.0
-        thorax[0, :3] = x
-        thorax[1, :3] = y
-        thorax[2, :3] = z
-        thorax[:3, 3] = o
+        thorax_axis = np.column_stack([x, y, z, o])
 
-        return thorax
+        num_frames = clav.shape[0]
+        thorax_axis_matrix = thorax_axis.reshape(num_frames, 4, 3).transpose(0, 2, 1)
 
-
+        return thorax_axis_matrix
 
 
     def calc_joint_center_shoulder(self, rsho, lsho, thorax_axis, r_wand, l_wand, r_sho_off, l_sho_off):

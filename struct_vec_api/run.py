@@ -30,7 +30,7 @@ print(f"{model.data.dynamic.RoboWalk.axes.Pelvis.shape=}")
 print(f"{model.data.dynamic.Sample_Dynamic.angles.RHip.shape=}")
 
 # Indexing cgm
-print(f"{cgm[2].data.dynamic.RoboWalk.axes.REyeball.shape=}")
+print(f"{cgm[2].data.dynamic.RoboWalk.axes.REye.shape=}")
 
 # TODO: Export
 

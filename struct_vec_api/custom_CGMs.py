@@ -11,88 +11,58 @@ class Model_CustomPelvis(Model):
     def calc_axis_pelvis(self, bodymass, imaginary_measurement, rasi, lasi, rpsi, lpsi, sacr):
         """
         Make the Pelvis Axis.
+
+        Overrides the calc_axis_pelvis function in Model
         """
 
-        # Verify that the input data is the correct shape
-        # print(f"{rasi.shape=}")
-        # print(f"{lasi.shape=}")
-        # print(f"{rpsi.shape=}")
-        # print(f"{lpsi.shape=}")
-
-        # Print to verify overridden function is being called
-        # print("\n\tCustomPelvis called instead") 
-        # print(f"\t\t{bodymass=},\n\t\t{imaginary_measurement=},\n\t\t{rasi.shape=},\n\t\t{lasi.shape=},\n\t\t{rpsi.shape=},\n\t\t{lpsi.shape=},\n\t\t{sacr=}\n")
-
-        # Get the Pelvis Joint Centre
-        if sacr is None:
-            sacr = (rpsi + lpsi) / 2.0
-
-        # Origin is Midpoint between RASI and LASI
-        o = (rasi+lasi)/2.0
-
-        b1 = o - sacr
-        b2 = lasi - rasi
-
-        # y is normalized b2
-        y = b2 / np.linalg.norm(b2,axis=1)[:, np.newaxis]
-
-        b3 = b1 - ( y * np.sum(b1*y,axis=1)[:, np.newaxis] )
-        x = b3/np.linalg.norm(b3,axis=1)[:, np.newaxis]
-
-        # Z-axis is cross product of x and y vectors.
-        z = np.cross(x, y)
-
         num_frames = rasi.shape[0]
-        pelvis_stack = np.column_stack([x,y,z,o])
-        pelvis_matrix = pelvis_stack.reshape(num_frames,4,3).transpose(0,2,1)
+        x = np.zeros((num_frames, 3))
+        y = np.zeros((num_frames, 3))
+        z = np.zeros((num_frames, 3))
+        o = np.zeros((num_frames, 3))
 
-        return pelvis_matrix
+        pel_axis_stack = np.column_stack([x,y,z,o])
+        pel_axis_matrix = pel_axis_stack.reshape(num_frames,4,3).transpose(0,2,1)
+        # [ xx xy xz xo ] = pel_axis_matrix[0]
+        # [ yx yy yz yo ] = pel_axis_matrix[1]
+        # [ zx zy zz zo ] = pel_axis_matrix[2]
+        # [ 0  0  0  1  ] = pel_axis_matrix[3]
 
+        return pel_axis_matrix
 
 
 class Model_NewFunction(Model):
     def __init__(self, static_trial, dynamic_trials, measurements):
         super().__init__(static_trial, dynamic_trials, measurements)
-        self.add_function('calc_axis_eyeball', measurements=["Bodymass", "ImaginaryMeasurement"],
-                                               markers=["RASI", "LASI", "RPSI", "LPSI", "SACR"],
-                                               returns_axes=['REyeball', 'LEyeball'],
-                                               order=['calc_axis_knee', -1])
+        self.add_function('calc_axis_eye', measurements=["Bodymass", "HeadOffset"],
+                                               markers=["RFHD", "LFHD", "RBHD", "LBHD"],
+                                               axes=["Head"],
+                                               returns_axes=['REye', 'LEye'],
+                                               order=['calc_axis_head', 1]) 
 
-    def calc_axis_eyeball(self, bodymass, imaginary_measurement, rasi, lasi, rpsi, lpsi, sacr):
+    def calc_axis_eye(self, bodymass, head_offset, rfhd, lfhd, rbhd, lbhd, head_axis):
         """
-        Make the Eyeball Axis.
+        Make the Eye Axis.
         
-        (Copy of calc_axis_pelvis function, but implemented as a custom
-        function that returns custom axes)
+        Adds a custom function
         """
 
-        # Verify that the input data is the correct shape
-        # print(f"{rasi.shape=}")
-        # print(f"{lasi.shape=}")
-        # print(f"{rpsi.shape=}")
-        # print(f"{lpsi.shape=}")
+        num_frames = rfhd.shape[0]
+        x = np.zeros((num_frames, 3))
+        y = np.zeros((num_frames, 3))
+        z = np.zeros((num_frames, 3))
+        o = np.zeros((num_frames, 3))
 
-        # Get the Pelvis Joint Centre
-        if sacr is None:
-            sacr = (rpsi + lpsi) / 2.0
+        r_eye_axis_stack = np.column_stack([x,y,z,o])
+        l_eye_axis_stack = np.column_stack([x,y,z,o])
 
-        # Origin is Midpoint between RASI and LASI
-        o = (rasi+lasi)/2.0
+        r_eye_axis_matrix = r_eye_axis_stack.reshape(num_frames,4,3).transpose(0,2,1)
+        l_eye_axis_matrix = l_eye_axis_stack.reshape(num_frames,4,3).transpose(0,2,1)
 
-        b1 = o - sacr
-        b2 = lasi - rasi
+        # [ xx xy xz xo ] = [r/l]_eye_axis_matrix[0]
+        # [ yx yy yz yo ] = [r/l]_eye_axis_matrix[1]
+        # [ zx zy zz zo ] = [r/l]_eye_axis_matrix[2]
+        # [ 0  0  0  1  ] = [r/l]_eye_axis_matrix[3]
 
-        # y is normalized b2
-        y = b2 / np.linalg.norm(b2,axis=1)[:, np.newaxis]
-        b3 = b1 - ( y * np.sum(b1*y,axis=1)[:, np.newaxis] )
-        x = b3/np.linalg.norm(b3,axis=1)[:, np.newaxis]
-
-        # Z-axis is cross product of x and y vectors.
-        z = np.cross(x, y)
-
-        num_frames = rasi.shape[0]
-        eyeball_stack = np.column_stack([x,y,z,o])
-        eyeball_matrix = eyeball_stack.reshape(num_frames,4,3).transpose(0,2,1)
-
-        return eyeball_matrix, eyeball_matrix
+        return np.array([r_eye_axis_matrix, l_eye_axis_matrix])
 

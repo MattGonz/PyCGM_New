@@ -28,7 +28,7 @@ def angles():
             'calc_angle_foot': ['RFoot', 'LFoot'],
             'calc_angle_head': ['Head'],
             'calc_angle_thorax': ['Thorax'],
-            'neck_angle': ['Neck'],
+            'calc_angle_neck': ['Neck'],
             'spine_angle': ['Spine'],
             'shoulder_angle': ['RShoulder', 'LShoulder'],
             'elbow_angle': ['RElbow', 'LElbow'],

@@ -1679,7 +1679,7 @@ class CalcAngles():
 
     def __init__(self):
         self.funcs = [self.calc_angle_pelvis, self.calc_angle_hip, self.calc_angle_knee, self.calc_angle_ankle, self.calc_angle_foot, self.calc_angle_head,
-                      self.calc_angle_thorax, self.neck_angle, self.spine_angle, self.shoulder_angle, self.elbow_angle, self.wrist_angle]
+                      self.calc_angle_thorax, self.calc_angle_neck, self.spine_angle, self.shoulder_angle, self.elbow_angle, self.wrist_angle]
 
     def calc_angle_pelvis(self, axis_p, axis_d):
         r"""Pelvis angle calculation.
@@ -1928,137 +1928,110 @@ class CalcAngles():
 
         return np.asarray(thorax)
 
-    def neck_angle(self, axis_p, axis_d):
-        r"""Head angle calculation function.
+    def calc_angle_neck(self, axis_p, axis_d):
+        r"""Head angle calculation.
 
-        This function takes in two axes and returns three angles and uses the
-        inverse Euler rotation matrix in YXZ order.
+        Takes in two axes and returns the head rotation, 
+        flexion, and abduction angles in degrees.
 
-        Returns the angles in degrees.
+        Uses the inverse Euler rotation matrix in YXZ order.
 
         Parameters
         ----------
-        axis_p : list
-            Shows the unit vector of axis_p, the position of the proximal axis.
-        axis_d : list
-            Shows the unit vector of axis_d, the position of the distal axis.
+        axis_p : array
+            4x4 affine matrix representing the position of the proximal axis.
+        axis_d : array
+            4x4 affine matrix representing the position of the distal axis.
 
         Returns
         -------
-        angle : list
-            Returns the gamma, beta, alpha angles in degrees in a 1x3 corresponding list.
+        angle : array
+            1x3 array representing the head rotation, flexion, and abduction angles in degrees
 
         Notes
         -----
-        :math:`\beta = \arctan2{((axisD_{z} \cdot axisP_{y}), \sqrt{(axisD_{x} \cdot axisP_{y})^2 + (axisD_{y} \cdot axisP_{y})^2}})`
-
         :math:`\alpha = \arctan2{(-(axisD_{z} \cdot axisP_{x}), axisD_{z} \cdot axisP_{z})}`
+
+        :math:`\beta = \arctan2{((axisD_{z} \cdot axisP_{y}), \sqrt{(axisD_{x} \cdot axisP_{y})^2 + (axisD_{y} \cdot axisP_{y})^2}})`
 
         :math:`\gamma = \arctan2{(-(axisD_{x} \cdot axisP_{y}), axisD_{y} \cdot axisP_{y})}`
 
         Examples
         --------
         >>> import numpy as np
-        >>> from .pycgm_calc import CalcAngles
-        >>> axis_p = [[0.04, 0.99, 0.06, 512.34],
-        ...           [0.99, -0.04, -0.05, 471.15],
-        ...           [-0.05,  0.07, -0.99, 124.14],
-        ...           [0, 0, 0, 1]]
-        >>> axis_d = [[-0.18, -0.98, -0.02, 842.14],
-        ...           [ 0.71, -0.11, -0.69, 985.38],
-        ...           [ 0.67, -0.14, 0.72, 412.87],
-        ...           [0, 0, 0, 1]]
-        >>> np.around(CalcAngles().neck_angle(axis_p,axis_d), 2)
-        array([ -5.18, -39.99, 190.54])
+        >>> from .pyCGM import calc_angle_head
+        >>> axis_p = np.array([[ 0.04,  0.99,  0.06, 512.34],
+        ...                    [ 0.99, -0.04, -0.05, 471.15],
+        ...                    [-0.05,  0.07, -0.99, 124.14],
+        ...                    [ 0.,    0.,    0.,     1.]])
+        >>> axis_d = np.array([[-0.18, -0.98, -0.02, 842.14],
+        ...                    [ 0.71, -0.11, -0.69, 985.38],
+        ...                    [ 0.67, -0.14,  0.72, 412.87],
+        ...                    [ 0.,    0.,    0.,     1.]])
+        >>> np.around(calc_angle_head(axis_p, axis_d), 2)
+        array([ 185.18,  -39.99, -190.54])
         """
-        # this is the angle calculation which order is Y-X-Z
-        # alpha is abdcution angle.
 
-        ang = (
-            (-1 * axis_d[2][0] * axis_p[1][0])
-            + (-1 * axis_d[2][1] * axis_p[1][1])
-            + (-1 * axis_d[2][2] * axis_p[1][2])
-        )
+        axis_p = np.asarray(axis_p)
+        axis_d = np.asarray(axis_d)
+
+        axis_p = axis_p[:, :3, :3]
+        axis_d = axis_d[:, :3, :3]
+
+        # ang = (np.dot(-1 * axis_d[:, :, 2], axis_p[:, :, 1]))
+        ang = np.sum(-1 * axis_d[:, :, 2] * axis_p[:, :, 1], axis=1)
+        # ang = (-1 * axis_d[:, :, 2]) @ (axis_p[:, :, 1])
         alpha = np.nan
-        if -1 <= ang <= 1:
-            alpha = np.arcsin(ang)
+        alpha = np.where((ang >= -1) & (ang <= 1), np.arcsin(ang), alpha)
 
-        # check the abduction angle is in the area between -pi/2 and pi/2
-        # beta is flextion angle
-        # gamma is rotation angle
+        # Beta is the flexion angle, alpha is the abduction angle, gamma is the rotation angle
 
-        beta = np.arctan2(
-            (axis_d[2][0] * axis_p[1][0])
-            + (axis_d[2][1] * axis_p[1][1])
-            + (axis_d[2][2] * axis_p[1][2]),
-            np.sqrt(
-                (
-                    axis_d[0][0] * axis_p[1][0]
-                    + axis_d[0][1] * axis_p[1][1]
-                    + axis_d[0][2] * axis_p[1][2]
-                ) ** 2
-                + (
-                    axis_d[1][0] * axis_p[1][0]
-                    + axis_d[1][1] * axis_p[1][1]
-                    + axis_d[1][2] * axis_p[1][2]
-                ) ** 2
-            ),
-        )
+        beta = np.arctan2(np.sum(axis_d[:, :, 2] * axis_p[:, :, 1], axis=1),
+                                 np.sqrt((np.sum(axis_d[:, :, 0] * axis_p[:, :, 1], axis=1)) ** 2 
+                                       + (np.sum(axis_d[:, :, 1] * axis_p[:, :, 1], axis=1) ** 2)))
 
-        alpha = np.arctan2(
-            -1 * (
-                (axis_d[2][0] * axis_p[0][0])
-                + (axis_d[2][1] * axis_p[0][1])
-                + (axis_d[2][2] * axis_p[0][2])
-            ), (
-                (axis_d[2][0] * axis_p[2][0])
-                + (axis_d[2][1] * axis_p[2][1])
-                + (axis_d[2][2] * axis_p[2][2])
-            )
-        )
+        alpha = np.arctan2(-1 * (np.sum(axis_d[:, :, 2] * axis_p[:, :, 0], axis=1)), 
+                                (np.sum(axis_d[:, :, 2] * axis_p[:, :, 2], axis=1)))
 
-        gamma = np.arctan2(
-            -1 * (
-                (axis_d[0][0] * axis_p[1][0])
-                + (axis_d[0][1] * axis_p[1][1])
-                + (axis_d[0][2] * axis_p[1][2])
-            ), (
-                (axis_d[1][0] * axis_p[1][0])
-                + (axis_d[1][1] * axis_p[1][1])
-                + (axis_d[1][2] * axis_p[1][2])
-            ),
-        )
+        gamma = np.arctan2(-1 * (np.sum(axis_d[:, :, 0] * axis_p[:, :, 1], axis=1)), 
+                                (np.sum(axis_d[:, :, 1] * axis_p[:, :, 1], axis=1)))
 
         alpha = 180.0 * alpha / pi
-        beta = 180.0 * beta / pi
+        beta =  180.0 * beta / pi
         gamma = 180.0 * gamma / pi
 
         beta *= -1
 
-        if alpha < 0:
-            alpha *= -1
-        else:
-            if 0 < alpha < 180:
-                alpha = 180 + (180 - alpha)
+        def alpha_conditions(alpha):
+            if alpha < 0:
+                return alpha * -1
+            elif 0 < alpha < 180:
+                return 180 + (180 - alpha)
 
-        if gamma > 90.0:
-            if gamma > 120:
-                gamma = (gamma - 180) * -1
+        get_alpha = np.vectorize(alpha_conditions)
+        alpha = get_alpha(alpha)
+
+        def gamma_conditions(gamma):
+            if gamma > 90.0:
+                if gamma > 120:
+                    return (gamma - 180) * -1
+                else:
+                    return (gamma + 180) * -1
             else:
-                gamma = (gamma + 180) * -1
-        else:
-            if gamma < 0:
-                gamma = (gamma + 180) * -1
-            else:
-                gamma = (gamma * -1) - 180.0
+                if gamma < 0:
+                    return (gamma + 180) * -1
+                else:
+                    return (gamma * -1) - 180.0
 
+        get_gamma = np.vectorize(gamma_conditions)
+        gamma = get_gamma(gamma)
 
-        neck = [alpha, beta, gamma]
+        alpha  = (alpha - 180) * -1
+        gamma *= -1
 
-        neck[0] = (neck[0] - 180) * -1
-        neck[2] *= -1
+        angle = np.array([alpha, beta, gamma]).T
 
-        return np.asarray(neck)
+        return np.asarray(angle)
 
     def spine_angle(self, axis_p, axis_d):
         r"""Spine angle calculation.

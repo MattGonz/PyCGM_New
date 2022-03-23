@@ -1679,7 +1679,7 @@ class CalcAngles():
 
     def __init__(self):
         self.funcs = [self.calc_angle_pelvis, self.calc_angle_hip, self.calc_angle_knee, self.calc_angle_ankle, self.calc_angle_foot, self.calc_angle_head,
-                      self.calc_angle_thorax, self.calc_angle_neck, self.spine_angle, self.shoulder_angle, self.elbow_angle, self.wrist_angle]
+                      self.calc_angle_thorax, self.calc_angle_neck, self.calc_angle_spine, self.shoulder_angle, self.elbow_angle, self.wrist_angle]
 
     def calc_angle_pelvis(self, axis_p, axis_d):
         r"""Pelvis angle calculation.
@@ -2033,73 +2033,64 @@ class CalcAngles():
 
         return np.asarray(angle)
 
-    def spine_angle(self, axis_p, axis_d):
+    def calc_angle_spine(self, axis_pelvis, axis_thorax):
         r"""Spine angle calculation.
 
-        This function takes in two axes and returns three angles and uses the
-        inverse Euler rotation matrix in YXZ order.
-        Returns the angles in degrees.
+        Takes in the pelvis and thorax axes and returns the spine rotation, 
+        flexion, and abduction angles in degrees.
+
+        Uses the inverse Euler rotation matrix in YXZ order.
 
         Parameters
         ----------
-        axis_p : list
-            Shows the unit vector of axis_p, the position of the proximal axis.
-        axis_d : list
-            Shows the unit vector of axis_d, the position of the distal axis.
+        axis_pelvis : array
+            4x4 affine matrix representing the position of the pelvis axis.
+        axis_thorax : array
+            4x4 affine matrix representing the position of the thorax axis.
 
         Returns
         -------
-        angle : list
-            Returns the gamma, beta, alpha angles in degrees in a 1x3 corresponding list.
+        angle : array
+            1x3 array representing the spine rotation, flexion, and abduction angles in degrees
 
         Notes
         -----
-        :math:`\alpha = \arcsin{(axis\_d_{y} \cdot axis\_p_{z})}`
+            :math:`\alpha = \arcsin{(axis\_d_{y} \cdot axis\_p_{z})}`
 
-        :math:`\gamma = \arcsin{(-(axis\_d_{y} \cdot axis\_p_{x}) / \cos{\alpha})}`
+            :math:`\gamma = \arcsin{(-(axis\_d_{y} \cdot axis\_p_{x}) / \cos{\alpha})}`
 
-        :math:`\beta = \arcsin{(-(axis\_d_{x} \cdot axis\_p_{z}) / \cos{\alpha})}`
+            :math:`\beta = \arcsin{(-(axis\_d_{x} \cdot axis\_p_{z}) / \cos{\alpha})}`
 
         Examples
         --------
         >>> import numpy as np
-        >>> from .pycgm_calc import CalcAngles
-        >>> axis_p = [[ 0.04,   0.99,  0.06, 749.24],
-        ...        [ 0.99, -0.04, -0.05, 321.12],
-        ...        [-0.05,  0.07, -0.99, 145.12],
-        ...        [0, 0, 0, 1]]
-        >>> axis_d = [[-0.18, -0.98,-0.02, 541.68],
-        ...        [ 0.71, -0.11,  -0.69, 112.48],
-        ...        [ 0.67, -0.14,   0.72, 155.77],
-        ...        [0, 0, 0, 1]]
-        >>> np.around(CalcAngles().spine_angle(axis_p,axis_d), 2)
-        array([  2.97, -39.78,   9.13])
+        >>> from .pyCGM import calc_angle_spine
+        >>> axis_pelvis = [[ 0.04,  0.99,  0.06, 749.24],
+        ...                [ 0.99, -0.04, -0.05, 321.12],
+        ...                [-0.05,  0.07, -0.99, 145.12],
+        ...                [ 0.,    0.,    0.,     1.]]
+        >>> axis_thorax = [[-0.18, -0.98, -0.02, 541.68],
+        ...                [ 0.71, -0.11, -0.69, 112.48],
+        ...                [ 0.67, -0.14,  0.72, 155.77],
+        ...                [ 0.,    0.,    0.,     1.]]
+        >>> np.around(calc_angle_spine(axis_pelvis, axis_thorax), 2) 
+        array([ 2.97,  9.13, 39.78])
         """
-        # this angle calculation is for spine angle.
+        # Calculation for the spine angle.
 
-        alpha = np.arcsin(
-            (axis_d[1][0] * axis_p[2][0])
-            + (axis_d[1][1] * axis_p[2][1])
-            + (axis_d[1][2] * axis_p[2][2])
-        )
+        axis_pelvis = np.asarray(axis_pelvis)
+        p_x = axis_pelvis[:, :, 0]
+        p_z = axis_pelvis[:, :, 2]
 
-        gamma = np.arcsin((
-            (-1 * axis_d[1][0] * axis_p[0][0])
-            + (-1 * axis_d[1][1] * axis_p[0][1])
-            + (-1 * axis_d[1][2] * axis_p[0][2])) / np.cos(alpha)
-        )
+        axis_thorax = np.asarray(axis_thorax)
+        t_x = axis_thorax[:, :, 0]
+        t_y = axis_thorax[:, :, 1]
 
-        beta = np.arcsin((
-            (-1 * axis_d[0][0] * axis_p[2][0])
-            + (-1 * axis_d[0][1] * axis_p[2][1])
-            + (-1 * axis_d[0][2] * axis_p[2][2])) / np.cos(alpha)
-        )
+        alpha = np.arcsin(np.sum(t_y * p_z, axis=1))
+        gamma = np.arcsin((-1 * np.sum(t_y * p_x, axis=1)) / np.cos(alpha))
+        beta  = np.arcsin((-1 * np.sum(t_x * p_z, axis=1)) / np.cos(alpha))
 
-        angle = [180.0 * beta / pi, 180.0 * gamma / pi, 180.0 * alpha / pi]
-
-        angle_z = angle[1]
-        angle[1] = angle[2] * -1
-        angle[2] = angle_z
+        angle = np.array([180.0 * beta / pi, 180.0 * gamma / pi, 180.0 * alpha / pi]).T
 
         return np.asarray(angle)
 

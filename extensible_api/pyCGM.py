@@ -5,7 +5,7 @@ import numpy as np
 from static import getStatic
 from pycgm_calc import CalcAxes, CalcAngles
 from utils import pycgmIO
-from pipelines import rigid_fill, filtering, prep, clearMarker
+# from pipelines import rigid_fill, filtering, prep, clearMarker
 from defaults.parameters import Measurement, Marker, Axis, Angle, AxisFunctions, AngleFunctions
 
 class pyCGM():

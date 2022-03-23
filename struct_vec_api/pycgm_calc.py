@@ -1679,7 +1679,7 @@ class CalcAngles():
 
     def __init__(self):
         self.funcs = [self.calc_angle_pelvis, self.calc_angle_hip, self.calc_angle_knee, self.calc_angle_ankle, self.calc_angle_foot, self.calc_angle_head,
-                      self.thorax_angle, self.neck_angle, self.spine_angle, self.shoulder_angle, self.elbow_angle, self.wrist_angle]
+                      self.calc_angle_thorax, self.neck_angle, self.spine_angle, self.shoulder_angle, self.elbow_angle, self.wrist_angle]
 
     def calc_angle_pelvis(self, axis_p, axis_d):
         r"""Pelvis angle calculation.
@@ -1902,26 +1902,29 @@ class CalcAngles():
         return np.asarray(angle)
 
 
-    def thorax_angle(self, axis_p, axis_d):
+    def calc_angle_thorax(self, axis_p, axis_d):
         r"""Normal angle calculation.
 
             Please refer to the static get_angle function for documentation.
         """
-        global_center = [0,0,0]
+        global_center = [0, 0, 0]
         global_axis_form = CalcUtils.rotmat(x=0, y=0, z=180)
 
         global_axis = np.vstack([np.subtract(global_axis_form[0], global_center),
                                  np.subtract(global_axis_form[1], global_center),
                                  np.subtract(global_axis_form[2], global_center)])
 
-        thorax = self.get_angle(global_axis, axis_d)
+        thorax = self.calc_angle(global_axis, axis_d)
 
-        if thorax[0] > 0:
-            thorax[0] -= 180
-        elif thorax[0] < 0:
-            thorax[0] += 180
+        def thorax_conditions(thorax_x):
+            if thorax_x > 0:
+                return thorax_x - 180
+            elif thorax_x < 0:
+                return thorax_x + 180
 
-        thorax[2] += 90
+        get_thorax = np.vectorize(thorax_conditions)
+        thorax[:, 0] = get_thorax(thorax[:, 0])
+        thorax[:, 2] += 90
 
         return np.asarray(thorax)
 

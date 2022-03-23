@@ -209,8 +209,8 @@ class AngleFunctions():
 
             [
                 # shoulder_angle parameters
-                Axis('Thorax'), Axis('RHum'),
-                Axis('Thorax'), Axis('LHum')
+                Axis('Thorax'),
+                Axis('RHum'), Axis('LHum')
             ],
 
             [

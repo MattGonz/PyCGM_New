@@ -30,6 +30,6 @@ def angles():
             'calc_angle_thorax': ['Thorax'],
             'calc_angle_neck': ['Neck'],
             'calc_angle_spine': ['Spine'],
-            'shoulder_angle': ['RShoulder', 'LShoulder'],
+            'calc_angle_shoulder': ['RShoulder', 'LShoulder'],
             'elbow_angle': ['RElbow', 'LElbow'],
             'wrist_angle': ['RWrist', 'LWrist']}

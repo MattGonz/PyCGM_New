@@ -24,7 +24,7 @@ def angles():
     return {'calc_angle_pelvis': ['Pelvis'],
             'calc_angle_hip': ['RHip', 'LHip'],
             'calc_angle_knee': ['RKnee', 'LKnee'],
-            'ankle_angle': ['RAnkle', 'LAnkle'],
+            'calc_angle_ankle': ['RAnkle', 'LAnkle'],
             'foot_angle': ['RFoot', 'LFoot'],
             'head_angle': ['Head'],
             'thorax_angle': ['Thorax'],

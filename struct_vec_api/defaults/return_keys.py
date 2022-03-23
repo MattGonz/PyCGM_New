@@ -31,5 +31,5 @@ def angles():
             'calc_angle_neck': ['Neck'],
             'calc_angle_spine': ['Spine'],
             'calc_angle_shoulder': ['RShoulder', 'LShoulder'],
-            'elbow_angle': ['RElbow', 'LElbow'],
+            'calc_angle_elbow': ['RElbow', 'LElbow'],
             'wrist_angle': ['RWrist', 'LWrist']}

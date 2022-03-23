@@ -1679,7 +1679,7 @@ class CalcAngles():
 
     def __init__(self):
         self.funcs = [self.calc_angle_pelvis, self.calc_angle_hip, self.calc_angle_knee, self.calc_angle_ankle, self.calc_angle_foot, self.calc_angle_head,
-                      self.calc_angle_thorax, self.calc_angle_neck, self.calc_angle_spine, self.calc_angle_shoulder, self.elbow_angle, self.wrist_angle]
+                      self.calc_angle_thorax, self.calc_angle_neck, self.calc_angle_spine, self.calc_angle_shoulder, self.calc_angle_elbow, self.wrist_angle]
 
     def calc_angle_pelvis(self, axis_p, axis_d):
         r"""Pelvis angle calculation.
@@ -2223,16 +2223,17 @@ class CalcAngles():
 
         return angles
 
-    def elbow_angle(self, r_axis_p, r_axis_d, l_axis_p, l_axis_d):
+    def calc_angle_elbow(self, r_axis_p, r_axis_d, l_axis_p, l_axis_d):
         r"""Normal angle calculation.
 
             Please refer to the static get_angle function for documentation.
         """
 
-        right_angles = self.get_angle(r_axis_p, r_axis_d)
-        right_angles[2] -= 90
-        left_angles = self.get_angle(l_axis_p, l_axis_d)
-        left_angles[2] -= 90
+        right_angles = self.calc_angle(r_axis_p, r_axis_d)
+        right_angles[:, 2] -= 90
+
+        left_angles = self.calc_angle(l_axis_p, l_axis_d)
+        left_angles[:, 2] -= 90
 
         return np.array([right_angles, left_angles])
 

@@ -23,7 +23,7 @@ def angles():
     """
     return {'calc_angle_pelvis': ['Pelvis'],
             'calc_angle_hip': ['RHip', 'LHip'],
-            'knee_angle': ['RKnee', 'LKnee'],
+            'calc_angle_knee': ['RKnee', 'LKnee'],
             'ankle_angle': ['RAnkle', 'LAnkle'],
             'foot_angle': ['RFoot', 'LFoot'],
             'head_angle': ['Head'],

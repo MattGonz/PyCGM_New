@@ -4,15 +4,16 @@ import numpy as np
 class Model_CustomPelvis(Model):
     def __init__(self, static_trial, dynamic_trials, measurements):
         super().__init__(static_trial, dynamic_trials, measurements)
+
+        # Override the calc_axis_pelvis function in Model
         self.modify_function('calc_axis_pelvis', measurements=["Bodymass", "ImaginaryMeasurement"],
-                                                 markers=["RASI", "LASI", "RPSI", "LPSI", "SACR"],
+                                                      markers=["RASI", "LASI", "RPSI", "LPSI", "SACR"],
                                                  returns_axes=['Pelvis'])
+
 
     def calc_axis_pelvis(self, bodymass, imaginary_measurement, rasi, lasi, rpsi, lpsi, sacr):
         """
         Make the Pelvis Axis.
-
-        Overrides the calc_axis_pelvis function in Model
         """
 
         num_frames = rasi.shape[0]
@@ -34,17 +35,17 @@ class Model_CustomPelvis(Model):
 class Model_NewFunction(Model):
     def __init__(self, static_trial, dynamic_trials, measurements):
         super().__init__(static_trial, dynamic_trials, measurements)
+
+        # Add a custom function to the Model
         self.add_function('calc_axis_eye', measurements=["Bodymass", "HeadOffset"],
-                                               markers=["RFHD", "LFHD", "RBHD", "LBHD"],
-                                               axes=["Head"],
-                                               returns_axes=['REye', 'LEye'],
-                                               order=['calc_axis_head', 1]) 
+                                                markers=["RFHD", "LFHD", "RBHD", "LBHD"],
+                                                   axes=["Head"],
+                                           returns_axes=['REye', 'LEye'],
+                                                  order=['calc_axis_head', 1]) 
 
     def calc_axis_eye(self, bodymass, head_offset, rfhd, lfhd, rbhd, lbhd, head_axis):
         """
         Make the Eye Axis.
-        
-        Adds a custom function
         """
 
         num_frames = rfhd.shape[0]
@@ -58,7 +59,6 @@ class Model_NewFunction(Model):
 
         r_eye_axis_matrix = r_eye_axis_stack.reshape(num_frames,4,3).transpose(0,2,1)
         l_eye_axis_matrix = l_eye_axis_stack.reshape(num_frames,4,3).transpose(0,2,1)
-
         # [ xx xy xz xo ] = [r/l]_eye_axis_matrix[0]
         # [ yx yy yz yo ] = [r/l]_eye_axis_matrix[1]
         # [ zx zy zz zo ] = [r/l]_eye_axis_matrix[2]

@@ -1488,57 +1488,50 @@ class CalcAxes():
         # Bring Elbow joint center, axes and Wrist Joint Center for calculating Radius Axes
         r_elbow, l_elbow, r_wrist_jc, l_wrist_jc = map(np.asarray, [r_elbow, l_elbow, r_wrist_jc, l_wrist_jc])
 
-        rejc = r_elbow[:3, 3]
-        lejc = l_elbow[:3, 3]
+        rejc = r_elbow[:, :, 3]
+        lejc = l_elbow[:, :, 3]
 
-        r_elbow_flex = r_elbow[1, :3]
-        l_elbow_flex = l_elbow[1, :3]
+        r_elbow_flex = r_elbow[:, :, 1]
+        l_elbow_flex = l_elbow[:, :, 1]
 
-        rwjc = r_wrist_jc[:3, 3]
-        lwjc = l_wrist_jc[:3, 3]
+        rwjc = r_wrist_jc[:, :, 3]
+        lwjc = l_wrist_jc[:, :, 3]
 
         # this is the axis of radius
         # right
-        y_axis = r_elbow_flex
-        y_axis = y_axis/np.linalg.norm(y_axis)
+        y_axis  = r_elbow_flex
+        y_axis /= np.linalg.norm(y_axis, axis=1)[:, np.newaxis]
 
-        z_axis = np.subtract(rejc, rwjc)
-        z_axis = z_axis/np.linalg.norm(z_axis)
+        z_axis  = np.subtract(rejc, rwjc)
+        z_axis /= np.linalg.norm(z_axis, axis=1)[:, np.newaxis]
 
-        x_axis = np.cross(y_axis, z_axis)
-        x_axis = x_axis/np.linalg.norm(x_axis)
+        x_axis  = np.cross(y_axis, z_axis)
+        x_axis /= np.linalg.norm(x_axis, axis=1)[:, np.newaxis]
 
-        z_axis = np.cross(x_axis, y_axis)
-        z_axis = z_axis/np.linalg.norm(z_axis)
+        z_axis  = np.cross(x_axis, y_axis)
+        z_axis /= np.linalg.norm(z_axis, axis=1)[:, np.newaxis]
 
-        r_axis = np.zeros((4, 4))
-        r_axis[3, 3] = 1.0
-        r_axis[0, :3] = x_axis
-        r_axis[1, :3] = y_axis
-        r_axis[2, :3] = z_axis
-        r_axis[:3, 3] = rwjc
+        num_frames = r_elbow.shape[0]
+        r_wrist_axis_stack  = np.column_stack([x_axis, y_axis, z_axis, rwjc])
+        r_wrist_axis_matrix = r_wrist_axis_stack.reshape(num_frames, 4, 3).transpose(0, 2, 1)
 
         # left
-        y_axis = l_elbow_flex
-        y_axis = y_axis/np.linalg.norm(y_axis)
+        y_axis  = l_elbow_flex
+        y_axis /= np.linalg.norm(y_axis, axis=1)[:, np.newaxis]
 
-        z_axis = np.subtract(lejc, lwjc)
-        z_axis = z_axis/np.linalg.norm(z_axis)
+        z_axis  = np.subtract(lejc, lwjc)
+        z_axis /= np.linalg.norm(z_axis, axis=1)[:, np.newaxis]
 
-        x_axis = np.cross(y_axis, z_axis)
-        x_axis = x_axis/np.linalg.norm(x_axis)
+        x_axis  = np.cross(y_axis, z_axis)
+        x_axis /= np.linalg.norm(x_axis, axis=1)[:, np.newaxis]
 
-        z_axis = np.cross(x_axis, y_axis)
-        z_axis = z_axis/np.linalg.norm(z_axis)
+        z_axis  = np.cross(x_axis, y_axis)
+        z_axis /= np.linalg.norm(z_axis, axis=1)[:, np.newaxis]
 
-        l_axis = np.zeros((4, 4))
-        l_axis[3, 3] = 1.0
-        l_axis[0, :3] = x_axis
-        l_axis[1, :3] = y_axis
-        l_axis[2, :3] = z_axis
-        l_axis[:3, 3] = lwjc
+        l_wrist_axis_stack  = np.column_stack([x_axis, y_axis, z_axis, lwjc])
+        l_wrist_axis_matrix = l_wrist_axis_stack.reshape(num_frames, 4, 3).transpose(0, 2, 1)
 
-        return np.asarray([r_axis, l_axis])
+        return np.asarray([r_wrist_axis_matrix, l_wrist_axis_matrix])
 
 
     def calc_axis_hand(self, rwra, rwrb, lwra, lwrb, rfin, lfin, r_wrist_jc, l_wrist_jc, r_hand_thickness, l_hand_thickness):

@@ -14,7 +14,7 @@ def axes():
             'calc_joint_center_shoulder': ['RClavJC', 'LClavJC'],
             'calc_axis_shoulder': ['RClav', 'LClav'],
             'calc_axis_elbow': ['RHum', 'LHum', 'RWristJC', 'LWristJC'],
-            'calc_axis_rad': ['RRad', 'LRad'],
+            'calc_axis_wrist': ['RRad', 'LRad'],
             'calc_axis_hand': ['RHand', 'LHand']}
 
 def angles():

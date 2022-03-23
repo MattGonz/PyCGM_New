@@ -46,6 +46,33 @@ class Model(ModelCreator):
 
                 print(f"\t{trial_name:<20}\t{func.__name__:<25}\t{end-start:.5f}s")
 
+            for index, func in enumerate(self.angle_functions):
+
+                # Retrieve the names of the angles returned by this function
+                # e.g. 'calc_angle_pelvis' -> 'Pelvis'
+                returned_angle_names = self.angle_function_to_return[func.__name__]
+
+                start = time.time()
+
+                # Get the parameters for this function, run it
+                parameters = self.angle_func_parameters[trial_name][self.angle_execution_order[func.__name__]]
+                ret_angles = np.array(func(*parameters))
+
+                # Insert returned angles into the self.angle_results structured array
+                if ret_angles.ndim == 4:
+                    # Multiple angles returned by one function
+                    for ret_angles_index, angle in enumerate(ret_angles):
+                        # Insert each angle into angle_results
+                        self.angle_results[trial_name][returned_angle_names[ret_angles_index]] = angle
+
+                else:
+                    # Insert returned angle into angle_results
+                    self.angle_results[trial_name][returned_angle_names[0]] = ret_angles
+
+                end = time.time()
+
+                print(f"\t{trial_name:<20}\t{func.__name__:<25}\t{end-start:.5f}s")
+
         start = time.time()
         self.structure_model_output()
         end = time.time()

@@ -32,4 +32,4 @@ def angles():
             'calc_angle_spine': ['Spine'],
             'calc_angle_shoulder': ['RShoulder', 'LShoulder'],
             'calc_angle_elbow': ['RElbow', 'LElbow'],
-            'wrist_angle': ['RWrist', 'LWrist']}
+            'calc_angle_wrist': ['RWrist', 'LWrist']}

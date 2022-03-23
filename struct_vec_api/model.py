@@ -59,7 +59,7 @@ class Model(ModelCreator):
                 ret_angles = np.array(func(*parameters))
 
                 # Insert returned angles into the self.angle_results structured array
-                if ret_angles.ndim == 4:
+                if ret_angles.ndim == 3:
                     # Multiple angles returned by one function
                     for ret_angles_index, angle in enumerate(ret_angles):
                         # Insert each angle into angle_results

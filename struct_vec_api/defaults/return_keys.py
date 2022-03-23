@@ -22,7 +22,7 @@ def angles():
     map function names to the angles they return
     """
     return {'calc_angle_pelvis': ['Pelvis'],
-            'hip_angle': ['RHip', 'LHip'],
+            'calc_angle_hip': ['RHip', 'LHip'],
             'knee_angle': ['RKnee', 'LKnee'],
             'ankle_angle': ['RAnkle', 'LAnkle'],
             'foot_angle': ['RFoot', 'LFoot'],

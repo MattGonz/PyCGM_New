@@ -1,20 +1,25 @@
 from model import Model
+import time
 
 
 class PyCGM():
-    def __init__(self, subjects):
-        if isinstance(subjects, Model):
-            subjects = [subjects]
+    def __init__(self, models):
+        if isinstance(models, Model):
+            models = [models]
 
-        self.subjects = subjects
+        self.models = models
 
 
     def run_all(self):
-        for i, subject in enumerate(self.subjects):
-            print(f"Running subject {i+1} of {len(self.subjects)}")
-            subject.run()
+        for i, model in enumerate(self.models):
+            print(f"Running model {i+1} of {len(self.models)}")
+
+            start = time.time()
+            model.run()
+            end = time.time()
+            print(f'\tModel {i+1} runtime:\t\t\t\t\t{end-start:.5f}s\n')
 
 
     def __getitem__(self, index):
-        return self.subjects[index]
+        return self.models[index]
 

@@ -76,7 +76,7 @@ class Model(ModelCreator):
         start = time.time()
         self.structure_model_output()
         end = time.time()
-        print(f'\tTime to structure output:\t\t\t\t{end-start:.5f}s\n')
+        print(f'\tTime to structure output:\t\t\t\t{end-start:.5f}s')
 
 
     def structure_model_output(self):

@@ -1623,13 +1623,12 @@ class CalcAxes():
                 [  0.6 , -0.76,  0.27, 1068.02],
                 [  0.  ,  0.  ,  0.  ,    1.  ]])]
         """
-        r_wrist_jc, l_wrist_jc, rwra, rwrb, lwra, lwrb, rfin, lfin = map(np.asarray, [r_wrist_jc, l_wrist_jc, rwra, rwrb, lwra, lwrb, rfin, lfin])
 
         rwri = (rwra + rwrb) / 2.0
         lwri = (lwra + lwrb) / 2.0
 
-        rwjc = r_wrist_jc[:3, 3]
-        lwjc = l_wrist_jc[:3, 3]
+        rwjc = r_wrist_jc[:, :, 3]
+        lwjc = l_wrist_jc[:, :, 3]
 
         mm = 7.0
 
@@ -1641,53 +1640,38 @@ class CalcAxes():
 
         # Left
         z_axis = lwjc - lhnd
-        z_axis_div = np.linalg.norm(z_axis)
-        z_axis = np.divide(z_axis, z_axis_div)
+        z_axis /= np.linalg.norm(z_axis, axis=1)[:, np.newaxis]
 
-        y_axis = lwri - lwra
-        y_axis_div = np.linalg.norm(y_axis)
-        y_axis = np.divide(y_axis, y_axis_div)
+        y_axis  = lwri - lwra
+        y_axis /= np.linalg.norm(y_axis, axis=1)[:, np.newaxis]
 
-        x_axis = np.cross(y_axis, z_axis)
-        x_axis_div = np.linalg.norm(x_axis)
-        x_axis = np.divide(x_axis, x_axis_div)
+        x_axis  = np.cross(y_axis, z_axis)
+        x_axis /= np.linalg.norm(x_axis, axis=1)[:, np.newaxis]
 
-        y_axis = np.cross(z_axis, x_axis)
-        y_axis_div = np.linalg.norm(y_axis)
-        y_axis = np.divide(y_axis, y_axis_div)
+        y_axis  = np.cross(z_axis, x_axis)
+        y_axis /= np.linalg.norm(y_axis, axis=1)[:, np.newaxis]
 
-        l_axis = np.zeros((4, 4))
-        l_axis[3, 3] = 1.0
-        l_axis[0, :3] = x_axis
-        l_axis[1, :3] = y_axis
-        l_axis[2, :3] = z_axis
-        l_axis[:3, 3] = lhnd
+        num_frames = rwra.shape[0]
+        r_hand_axis_stack  = np.column_stack([x_axis, y_axis, z_axis, lhnd])
+        r_hand_axis_matrix = r_hand_axis_stack.reshape(num_frames, 4, 3).transpose(0, 2, 1)
 
         # Right
-        z_axis = rwjc - rhnd
-        z_axis_div = np.linalg.norm(z_axis)
-        z_axis = np.divide(z_axis, z_axis_div)
+        z_axis  = rwjc - rhnd
+        z_axis /= np.linalg.norm(z_axis, axis=1)[:, np.newaxis]
 
-        y_axis = rwra - rwri
-        y_axis_div = np.linalg.norm(y_axis)
-        y_axis = np.divide(y_axis, y_axis_div)
+        y_axis  = rwra - rwri
+        y_axis /= np.linalg.norm(y_axis, axis=1)[:, np.newaxis]
 
-        x_axis = np.cross(y_axis, z_axis)
-        x_axis_div = np.linalg.norm(x_axis)
-        x_axis = np.divide(x_axis, x_axis_div)
+        x_axis  = np.cross(y_axis, z_axis)
+        x_axis /= np.linalg.norm(x_axis, axis=1)[:, np.newaxis]
 
-        y_axis = np.cross(z_axis, x_axis)
-        y_axis_div = np.linalg.norm(y_axis)
-        y_axis = np.divide(y_axis, y_axis_div)
+        y_axis  = np.cross(z_axis, x_axis)
+        y_axis /= np.linalg.norm(y_axis, axis=1)[:, np.newaxis]
 
-        r_axis = np.zeros((4, 4))
-        r_axis[3, 3] = 1.0
-        r_axis[0, :3] = x_axis
-        r_axis[1, :3] = y_axis
-        r_axis[2, :3] = z_axis
-        r_axis[:3, 3] = rhnd
+        l_hand_axis_stack  = np.column_stack([x_axis, y_axis, z_axis, rhnd])
+        l_hand_axis_matrix = l_hand_axis_stack.reshape(num_frames, 4, 3).transpose(0, 2, 1)
 
-        return np.asarray([r_axis, l_axis])
+        return np.asarray([r_hand_axis_matrix, l_hand_axis_matrix])
 
 
 

@@ -26,7 +26,7 @@ def angles():
             'calc_angle_knee': ['RKnee', 'LKnee'],
             'calc_angle_ankle': ['RAnkle', 'LAnkle'],
             'calc_angle_foot': ['RFoot', 'LFoot'],
-            'head_angle': ['Head'],
+            'calc_angle_head': ['Head'],
             'thorax_angle': ['Thorax'],
             'neck_angle': ['Neck'],
             'spine_angle': ['Spine'],

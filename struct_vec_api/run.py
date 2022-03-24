@@ -1,6 +1,7 @@
 from custom_CGMs import Model_CustomPelvis, Model_NewFunction
 from pyCGM import PyCGM
 from model import Model
+from csv_diff import diff_pycgm_csv
 
 # 3 Dynamic Trials (Includes 59993 frame trial)
 # model = Model('SampleData/Sample_2/RoboStatic.c3d', \
@@ -31,6 +32,9 @@ print(f"{model.data.dynamic.Sample_Dynamic.angles.RHip.shape=}")
 
 # Indexing cgm
 print(f"{cgm[2].data.dynamic.RoboWalk.axes.REye.shape=}")
+
+# Compare RoboWalk output to known CSV
+diff_pycgm_csv(model, 'RoboWalk', 'SampleData/Sample_2/pycgm_results.csv')
 
 # TODO: Export
 

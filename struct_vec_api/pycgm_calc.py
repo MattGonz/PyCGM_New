@@ -1651,9 +1651,9 @@ class CalcAxes():
         y_axis  = np.cross(z_axis, x_axis)
         y_axis /= np.linalg.norm(y_axis, axis=1)[:, np.newaxis]
 
-        num_frames = rwra.shape[0]
-        r_hand_axis_stack  = np.column_stack([x_axis, y_axis, z_axis, lhnd])
-        r_hand_axis_matrix = r_hand_axis_stack.reshape(num_frames, 4, 3).transpose(0, 2, 1)
+        num_frames = lwra.shape[0]
+        l_hand_axis_stack  = np.column_stack([x_axis, y_axis, z_axis, lhnd])
+        l_hand_axis_matrix = l_hand_axis_stack.reshape(num_frames, 4, 3).transpose(0, 2, 1)
 
         # Right
         z_axis  = rwjc - rhnd
@@ -1668,8 +1668,8 @@ class CalcAxes():
         y_axis  = np.cross(z_axis, x_axis)
         y_axis /= np.linalg.norm(y_axis, axis=1)[:, np.newaxis]
 
-        l_hand_axis_stack  = np.column_stack([x_axis, y_axis, z_axis, rhnd])
-        l_hand_axis_matrix = l_hand_axis_stack.reshape(num_frames, 4, 3).transpose(0, 2, 1)
+        r_hand_axis_stack  = np.column_stack([x_axis, y_axis, z_axis, rhnd])
+        r_hand_axis_matrix = r_hand_axis_stack.reshape(num_frames, 4, 3).transpose(0, 2, 1)
 
         return np.asarray([r_hand_axis_matrix, l_hand_axis_matrix])
 
@@ -1766,13 +1766,13 @@ class CalcAngles():
         """
 
         right_angles = self.calc_angle(r_axis_p, r_axis_d)
-        right_z = right_angles[:, 1]
-        right_angles[:, 0] = right_angles[:, 0] * -1 - 90
-        right_angles[:, 1] = right_angles[:, 2] * -1 + 90
+        right_z = np.copy(right_angles[:, 1])
+        right_angles[:, 0] = (right_angles[:, 0] * -1) - 90
+        right_angles[:, 1] = (right_angles[:, 2] * -1) + 90
         right_angles[:, 2] = right_z
 
         left_angles = self.calc_angle(l_axis_p, l_axis_d)
-        left_z = left_angles[:, 1] * -1
+        left_z = np.copy(left_angles[:, 1] * -1)
         left_angles[:, 0] = left_angles[:, 0] * -1 - 90
         left_angles[:, 1] = left_angles[:, 2] - 90
         left_angles[:, 2] = left_z

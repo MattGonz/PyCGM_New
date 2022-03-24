@@ -1786,12 +1786,12 @@ class CalcAngles():
         """
 
         right_angles = self.calc_angle(r_axis_p, r_axis_d)
-        right_z = right_angles[:, 1]
+        right_z = np.copy(right_angles[:, 1])
         right_angles[:, 1] = right_angles[:, 2] - 90
         right_angles[:, 2] = right_z
 
         left_angles = self.calc_angle(l_axis_p, l_axis_d)
-        left_z = left_angles[:, 1] * -1
+        left_z = np.copy(left_angles[:, 1] * -1)
         left_angles[:, 1] = (left_angles[:, 2] -90) * -1
         left_angles[:, 2] = left_z
 
@@ -1897,7 +1897,25 @@ class CalcAngles():
         get_gamma = np.vectorize(gamma_conditions)
         gamma = get_gamma(gamma)
 
-        angle = np.array([alpha, beta, gamma]).T
+        def headx_conditions(headx):
+            headx = headx * -1
+            if headx < -180:
+                return headx + 360
+            return headx
+
+        def headz_conditions(headz):
+            if headz < -180:
+                return headz - 360
+            return headz
+        
+        get_headx = np.vectorize(headx_conditions)
+        get_headz = np.vectorize(headz_conditions)
+
+        headx = get_headx(alpha)
+        heady = beta * -1
+        headz = get_headz(gamma)
+
+        angle = np.array([headx, heady, headz]).T
 
         return np.asarray(angle)
 

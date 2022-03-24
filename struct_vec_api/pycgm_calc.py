@@ -2108,7 +2108,9 @@ class CalcAngles():
         gamma = np.arcsin((-1 * np.sum(t_y * p_x, axis=1)) / np.cos(alpha))
         beta  = np.arcsin((-1 * np.sum(t_x * p_z, axis=1)) / np.cos(alpha))
 
-        angle = np.array([180.0 * beta / pi, 180.0 * gamma / pi, 180.0 * alpha / pi]).T
+        alpha *= -1
+
+        angle = np.array([180.0 * beta / pi, 180.0 * alpha / pi, 180.0 * gamma / pi]).T
 
         return np.asarray(angle)
 

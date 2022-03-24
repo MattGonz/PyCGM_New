@@ -27,7 +27,6 @@ class Model_CustomPelvis(Model):
         # [ xx xy xz xo ] = pel_axis_matrix[0]
         # [ yx yy yz yo ] = pel_axis_matrix[1]
         # [ zx zy zz zo ] = pel_axis_matrix[2]
-        # [ 0  0  0  1  ] = pel_axis_matrix[3]
 
         return pel_axis_matrix
 
@@ -62,7 +61,6 @@ class Model_NewFunction(Model):
         # [ xx xy xz xo ] = [r/l]_eye_axis_matrix[0]
         # [ yx yy yz yo ] = [r/l]_eye_axis_matrix[1]
         # [ zx zy zz zo ] = [r/l]_eye_axis_matrix[2]
-        # [ 0  0  0  1  ] = [r/l]_eye_axis_matrix[3]
 
         return np.array([r_eye_axis_matrix, l_eye_axis_matrix])
 

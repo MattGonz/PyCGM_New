@@ -1713,7 +1713,7 @@ class CalcAngles():
         Examples
         --------
         >>> import numpy as np
-        >>> from .pycgm_calc import CalcAngles
+        >>> from .dynamic import CalcAngles
         >>> axis_p = [[ 0.04, 0.99, 0.06, 452.12],
         ...           [ 0.99, -0.04, -0.05, 987.36],
         ...           [-0.05,  0.07, -0.99, 125.68],
@@ -2400,7 +2400,7 @@ class CalcUtils:
         Examples
         --------
         >>> import numpy as np
-        >>> from .pycgm_calc import CalcUtils
+        >>> from .dynamic import CalcUtils
         >>> x = 0.5
         >>> y = 0.3
         >>> z = 0.8

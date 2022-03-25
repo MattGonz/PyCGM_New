@@ -14,7 +14,7 @@ class ModelCreator():
         self.data = subject_utils.structure_subject(static_filename, dynamic_filenames, measurement_filename)
         self.trial_names = self.data.dynamic.dtype.names
 
-        # Add non-overridden default pycgm_calc funcs to funcs list
+        # Add non-overridden default dynamic funcs to funcs list
         self.axis_functions  = self.get_axis_functions()
         self.angle_functions = self.get_angle_functions()
 
@@ -44,7 +44,7 @@ class ModelCreator():
 
     def get_axis_functions(self):
         """
-        Initialize axis functions from pycgm_calc.CalcAxes if they have not
+        Initialize axis functions from dynamic.CalcAxes if they have not
         already been defined in a custom model.
         """
         axis_functions = []
@@ -59,7 +59,7 @@ class ModelCreator():
 
     def get_angle_functions(self):
         """
-        Initialize angle functions from pycgm_calc.CalcAngles if they have not
+        Initialize angle functions from dynamic.CalcAngles if they have not
         already been defined in a custom model.
         """
         angle_functions = []

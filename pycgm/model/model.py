@@ -1,10 +1,11 @@
 import time
-from model_creator import ModelCreator
-from utils import subject_utils
-from defaults.parameters import Measurement, Marker, Axis, Angle
 
 import numpy as np
 import numpy.lib.recfunctions as rfn
+
+from ..defaults.parameters import Angle, Axis, Marker, Measurement
+from ..utils import subject_utils
+from .model_creator import ModelCreator
 
 
 class Model(ModelCreator):

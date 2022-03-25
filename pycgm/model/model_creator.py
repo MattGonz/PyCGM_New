@@ -1,10 +1,12 @@
 from itertools import chain
-from utils import subject_utils
-from defaults.parameters import Measurement, Marker, Axis, Angle, AxisFunctions, AngleFunctions
-from defaults import return_keys
-from pycgm_calc import CalcAngles, CalcAxes
 
 import numpy as np
+
+from ..calc.dynamic import CalcAngles, CalcAxes
+from ..defaults import return_keys
+from ..defaults.parameters import (Angle, AngleFunctions, Axis, AxisFunctions,
+                                   Marker, Measurement)
+from ..utils import subject_utils
 
 
 class ModelCreator():

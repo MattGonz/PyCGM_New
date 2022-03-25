@@ -1,7 +1,9 @@
-import numpy as np
 import time
-from . import c3dpy3 as c3d
 import xml.etree.ElementTree as ET
+
+import numpy as np
+
+from . import c3dpy3 as c3d
 
 
 def frame_dtype():

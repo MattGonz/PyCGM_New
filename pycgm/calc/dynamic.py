@@ -1,6 +1,7 @@
-import numpy as np
 import math
-from math import pi, sin, cos, radians
+from math import cos, pi, radians, sin
+
+import numpy as np
 
 
 class CalcAxes():

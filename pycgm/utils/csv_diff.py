@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def diff_pycgm_csv(model, trial_name, csv_filename):
     """
     Tests the output axes and angles of a trial against 

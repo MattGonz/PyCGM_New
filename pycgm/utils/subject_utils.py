@@ -1,10 +1,13 @@
-import numpy as np
-from .new_io import frame_dtype, loadDataNew, loadVSK
-import time
 import re
+import time
+
+import numpy as np
 from numpy.lib import recfunctions as rfn
-import static
+
+from ..calc import static
+from .new_io import frame_dtype, loadDataNew, loadVSK
 from .pycgmIO import loadData
+
 
 def structure_subject(static_trial_filename, dynamic_trials, measurement_filename):
     '''

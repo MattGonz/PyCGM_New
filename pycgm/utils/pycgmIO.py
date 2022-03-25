@@ -5,6 +5,7 @@ This file is used for the input and output of pycgm functions.
 # Copyright (c) 2015 Mathew Schwartz <umcadop@gmail.com>
 
 import sys
+
 if sys.version_info[0] == 2:
     import c3d
     pyver = 2
@@ -22,11 +23,12 @@ try:
 except:
     useEZC3D = False
 
-from math import *
-import numpy as np
-import xml.etree.ElementTree as ET
-import os
 import errno
+import os
+import xml.etree.ElementTree as ET
+from math import *
+
+import numpy as np
 
 
 def loadData(filename, rawData=True):
@@ -223,7 +225,7 @@ def loadCSV(filename):
     if filename == '':
         self.returnedData.emit(None)
     import numpy as np
-    from numpy.compat import asbytes #probably not needed
+    from numpy.compat import asbytes  # probably not needed
 
     fh = open(filename,'r')
 

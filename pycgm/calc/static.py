@@ -6,8 +6,10 @@ Created on Tue Jul 28 16:55:25 2015
 
 @author: cadop
 """
+from math import acos, cos, radians, sin, sqrt
+
 import numpy as np
-from math import sin, cos, acos, sqrt, radians
+
 
 def rotmat(x=0,y=0,z=0):
     """Rotation Matrix function

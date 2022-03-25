@@ -1,150 +1,86 @@
-   41496073 function calls (39624073 primitive calls) in 34.884 seconds
+   9966005 function calls (9690005 primitive calls) in 9.146 seconds
 
    Ordered by: cumulative time
 
-   ncalls         tottime  percall  cumtime  percall filename:lineno(function)
-        1          0.352    0.352   34.884   34.884 pyCGM.py:373(run)
-3120000/1248000   12.132    0.000   26.067    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
-     6000          0.663    0.000   24.453    0.004 pyCGM.py:399(calc)
-   318000          0.149    0.000   11.054    0.000 <__array_function__ internals>:177(cross)
-   318000          3.527    0.000   10.624    0.000 numeric.py:1479(cross)
-    12000          0.009    0.000    9.948    0.001 <__array_function__ internals>:177(append)
-    12000          0.019    0.000    9.929    0.001 function_base.py:5337(append)
-    18000          0.016    0.000    9.900    0.001 <__array_function__ internals>:177(concatenate)
-    60000          1.187    0.000    6.955    0.000 dynamic.py:2249(find_joint_center)
-   954000          0.363    0.000    6.450    0.000 <__array_function__ internals>:177(moveaxis)
-   954000          1.906    0.000    5.622    0.000 numeric.py:1404(moveaxis)
-     6000          0.337    0.000    4.531    0.001 dynamic.py:878(hum_axis)
-   732000          0.320    0.000    4.336    0.000 <__array_function__ internals>:177(norm)
-   732000          1.859    0.000    3.619    0.000 linalg.py:2349(norm)
-  1908000          1.785    0.000    2.806    0.000 numeric.py:1341(normalize_axis_tuple)
-     6000          0.135    0.000    2.627    0.000 dynamic.py:1252(hand_axis)
-     6000          0.143    0.000    2.601    0.000 dynamic.py:261(knee_axis)
-     6000          0.149    0.000    2.526    0.000 dynamic.py:339(ankle_axis)
-     6000          0.191    0.000    1.809    0.000 dynamic.py:657(head_axis)
-   858000          0.332    0.000    1.619    0.000 <__array_function__ internals>:177(dot)
-     6000          0.225    0.000    1.576    0.000 dynamic.py:473(foot_axis)
-     6000          0.038    0.000    1.491    0.000 dynamic.py:789(clav_joint_center)
-     6000          0.174    0.000    1.294    0.000 dynamic.py:816(clav_axis)
-     6000          0.152    0.000    1.235    0.000 dynamic.py:1138(rad_axis)
-   180000          0.285    0.000    1.088    0.000 defmatrix.py:115(__new__)
-     6000          0.137    0.000    0.950    0.000 dynamic.py:716(thorax_axis)
-    84000          0.818    0.000    0.818    0.000 dynamic.py:2071(get_angle)
-   120000          0.117    0.000    0.785    0.000 defmatrix.py:215(__mul__)
-    30000          0.014    0.000    0.729    0.000 <__array_function__ internals>:177(nan_to_num)
-     6000          0.084    0.000    0.712    0.000 dynamic.py:759(wand_marker)
-    30000          0.127    0.000    0.684    0.000 type_check.py:404(nan_to_num)
-  1908000          0.385    0.000    0.621    0.000 numeric.py:1391(<listcomp>)
-   624007          0.488    0.000    0.488    0.000 {built-in method numpy.array}
-  1638000          0.486    0.000    0.486    0.000 {built-in method numpy.asarray}
-     6000          0.105    0.000    0.462    0.000 dynamic.py:12(pelvis_axis)
-  1014000          0.353    0.000    0.378    0.000 {method 'transpose' of 'numpy.ndarray' objects}
-  2862000          0.372    0.000    0.372    0.000 {built-in method numpy.core._multiarray_umath.normalize_axis_index}
-  6048000          0.355    0.000    0.355    0.000 {built-in method builtins.len}
-   180000          0.338    0.000    0.338    0.000 {built-in method _warnings.warn}
-     6000          0.060    0.000    0.308    0.000 dynamic.py:1676(thorax_angle)
-   954000          0.279    0.000    0.279    0.000 {built-in method builtins.sorted}
-   120001          0.213    0.000    0.278    0.000 {built-in method __new__ of type object at 0x8fa300}
-    48000          0.055    0.000    0.230    0.000 numeric.py:2131(identity)
-     6000          0.134    0.000    0.222    0.000 dynamic.py:104(hip_joint_center)
-   732000          0.137    0.000    0.192    0.000 linalg.py:116(isComplexType)
-   744000          0.184    0.000    0.184    0.000 {method 'ravel' of 'numpy.ndarray' objects}
-    24000          0.015    0.000    0.184    0.000 <__array_function__ internals>:177(around)
-    60000          0.022    0.000    0.184    0.000 ufunclike.py:48(func)
-   360000          0.144    0.000    0.174    0.000 defmatrix.py:167(__array_finalize__)
-    60000          0.042    0.000    0.172    0.000 defmatrix.py:36(asmatrix)
-    90000          0.043    0.000    0.170    0.000 <__array_function__ internals>:177(copyto)
-    30000          0.015    0.000    0.165    0.000 <__array_function__ internals>:177(isposinf)
-    24000          0.012    0.000    0.155    0.000 fromnumeric.py:3257(around)
-  1908000          0.151    0.000    0.151    0.000 {built-in method _operator.index}
-  1524002          0.150    0.000    0.150    0.000 {built-in method builtins.issubclass}
-    24000          0.019    0.000    0.143    0.000 fromnumeric.py:51(_wrapfunc)
-    48000          0.110    0.000    0.137    0.000 twodim_base.py:161(eye)
-     6000          0.015    0.000    0.136    0.000 dynamic.py:1470(hip_angle)
-   180000          0.116    0.000    0.133    0.000 defmatrix.py:189(__getitem__)
-   954000          0.131    0.000    0.131    0.000 numeric.py:1466(<listcomp>)
-     6000          0.014    0.000    0.129    0.000 dynamic.py:1502(ankle_angle)
-   318000          0.128    0.000    0.128    0.000 {built-in method numpy.empty}
-     6000          0.010    0.000    0.127    0.000 dynamic.py:2056(wrist_angle)
-     6000          0.011    0.000    0.127    0.000 dynamic.py:1487(knee_angle)
-     6000          0.008    0.000    0.126    0.000 dynamic.py:2043(elbow_angle)
-     6000          0.010    0.000    0.125    0.000 dynamic.py:1522(foot_angle)
-    24000          0.030    0.000    0.121    0.000 fromnumeric.py:38(_wrapit)
-     6000          0.115    0.000    0.121    0.000 dynamic.py:1901(shoulder_angle)
-  1236002          0.116    0.000    0.116    0.000 {built-in method builtins.isinstance}
-     6000          0.107    0.000    0.110    0.000 dynamic.py:1540(head_angle)
-     6000          0.104    0.000    0.106    0.000 dynamic.py:1699(neck_angle)
-    30000          0.012    0.000    0.105    0.000 <__array_function__ internals>:177(isneginf)
-    30000          0.103    0.000    0.103    0.000 ufunclike.py:127(isposinf)
-   954000          0.102    0.000    0.102    0.000 numeric.py:1400(_moveaxis_dispatcher)
-   954000          0.101    0.000    0.101    0.000 {method 'insert' of 'list' objects}
-   858000          0.101    0.000    0.101    0.000 multiarray.py:736(dot)
-     6000          0.092    0.000    0.101    0.000 dynamic.py:2188(rotmat)
-   318000          0.098    0.000    0.098    0.000 {built-in method numpy.promote_types}
-    30000          0.045    0.000    0.097    0.000 type_check.py:394(_getmaxmin)
-     6000          0.005    0.000    0.088    0.000 dynamic.py:1424(pelvis_angle)
-   732000          0.081    0.000    0.081    0.000 linalg.py:2345(_norm_dispatcher)
-    24000          0.081    0.000    0.081    0.000 {method 'round' of 'numpy.ndarray' objects}
-   156000          0.077    0.000    0.077    0.000 {built-in method numpy.zeros}
-     6000          0.005    0.000    0.075    0.000 <__array_function__ internals>:177(vstack)
-  1056001          0.069    0.000    0.069    0.000 {method 'append' of 'list' objects}
-        1          0.006    0.006    0.064    0.064 pyCGM.py:320(structure_trial_axes)
-    78000          0.044    0.000    0.063    0.000 <frozen importlib._bootstrap>:1033(_handle_fromlist)
-     6000          0.008    0.000    0.059    0.000 shape_base.py:222(vstack)
-    30000          0.059    0.000    0.059    0.000 ufunclike.py:199(isneginf)
-     6000          0.053    0.000    0.056    0.000 dynamic.py:1831(spine_angle)
-     6000          0.049    0.000    0.051    0.000 dynamic.py:230(hip_axis)
-   318000          0.041    0.000    0.041    0.000 numeric.py:1475(_cross_dispatcher)
-        1          0.003    0.003    0.040    0.040 pyCGM.py:329(structure_trial_angles)
-   396000          0.039    0.000    0.039    0.000 {built-in method math.cos}
-   384000          0.035    0.000    0.035    0.000 {built-in method math.sin}
-    60000          0.028    0.000    0.035    0.000 ufunclike.py:22(func)
-    12000          0.006    0.000    0.030    0.000 <__array_function__ internals>:177(ravel)
-     6000          0.003    0.000    0.029    0.000 <__array_function__ internals>:177(atleast_2d)
-    30000          0.024    0.000    0.028    0.000 getlimits.py:457(__new__)
-    12000          0.026    0.000    0.026    0.000 {method 'flatten' of 'numpy.ndarray' objects}
-     6000          0.018    0.000    0.022    0.000 shape_base.py:81(atleast_2d)
-    60000          0.014    0.000    0.019    0.000 numeric.py:1859(isscalar)
-        1          0.018    0.018    0.018    0.018 pyCGM.py:327(<listcomp>)
-    12000          0.010    0.000    0.018    0.000 fromnumeric.py:1755(ravel)
-    60000          0.017    0.000    0.017    0.000 {built-in method math.acos}
-        1          0.014    0.014    0.014    0.014 pyCGM.py:336(<listcomp>)
-    84000          0.012    0.000    0.012    0.000 {built-in method builtins.hasattr}
-    90000          0.008    0.000    0.008    0.000 multiarray.py:1071(copyto)
-    60000          0.006    0.000    0.006    0.000 ufunclike.py:68(_dispatcher)
-     6000          0.002    0.000    0.006    0.000 shape_base.py:218(_vhstack_dispatcher)
-    48009          0.006    0.000    0.006    0.000 {built-in method builtins.getattr}
-    42000          0.005    0.000    0.005    0.000 {built-in method math.radians}
-    30004          0.004    0.000    0.004    0.000 {method 'get' of 'dict' objects}
-    30000          0.004    0.000    0.004    0.000 type_check.py:400(_nan_to_num_dispatcher)
-    42000          0.004    0.000    0.004    0.000 {built-in method numpy.asanyarray}
-     6000          0.002    0.000    0.004    0.000 shape_base.py:207(_arrays_for_stack_dispatcher)
-    24000          0.003    0.000    0.003    0.000 {built-in method math.degrees}
-    24000          0.003    0.000    0.003    0.000 fromnumeric.py:3253(_around_dispatcher)
-    12000          0.003    0.000    0.003    0.000 function_base.py:5333(_append_dispatcher)
-    18000          0.002    0.000    0.002    0.000 multiarray.py:148(concatenate)
-    12000          0.002    0.000    0.002    0.000 fromnumeric.py:1751(_ravel_dispatcher)
-     6000          0.001    0.000    0.001    0.000 shape_base.py:77(_atleast_2d_dispatcher)
-        1          0.000    0.000    0.000    0.000 getlimits.py:490(_init)
-        1          0.000    0.000    0.000    0.000 getlimits.py:86(_str_smallest_subnormal)
-        2          0.000    0.000    0.000    0.000 getlimits.py:62(smallest_subnormal)
-        1          0.000    0.000    0.000    0.000 getlimits.py:305(_get_machar)
-        2          0.000    0.000    0.000    0.000 getlimits.py:91(_float_to_float)
-        1          0.000    0.000    0.000    0.000 getlimits.py:111(_float_to_str)
-        2          0.000    0.000    0.000    0.000 getlimits.py:24(_fr1)
-        2          0.000    0.000    0.000    0.000 {method 'reshape' of 'numpy.ndarray' objects}
-        1          0.000    0.000    0.000    0.000 {method 'newbyteorder' of 'numpy.generic' objects}
-        2          0.000    0.000    0.000    0.000 getlimits.py:101(_float_conv)
-        1          0.000    0.000    0.000    0.000 pyCGM.py:334(<listcomp>)
-        3          0.000    0.000    0.000    0.000 {method 'copy' of 'numpy.ndarray' objects}
-        1          0.000    0.000    0.000    0.000 pyCGM.py:325(<listcomp>)
-        9          0.000    0.000    0.000    0.000 {built-in method builtins.setattr}
-        1          0.000    0.000    0.000    0.000 getlimits.py:16(_fr0)
-        1          0.000    0.000    0.000    0.000 numerictypes.py:228(obj2sctype)
-        1          0.000    0.000    0.000    0.000 {method 'tobytes' of 'numpy.generic' objects}
-        1          0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
-        7          0.000    0.000    0.000    0.000 {method 'strip' of 'str' objects}
-        2          0.000    0.000    0.000    0.000 {method 'values' of 'dict' objects}
+   ncalls       tottime  percall  cumtime  percall filename:lineno(function)
+        1        0.000    0.000    9.156    9.156 pycgmCalc.py:49(calcAngles)
+        1        0.000    0.000    9.156    9.156 pycgmCalc.py:144(Calc)
+        1        0.044    0.044    9.156    9.156 pycgmCalc.py:150(calcFrames)
+     6000        0.792    0.000    9.111    0.002 pyCGM.py:2289(JointAngleCalc)
+    60000        1.040    0.000    3.492    0.000 pyCGM.py:1943(findJointC)
+594000/318000    0.723    0.000    1.769    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+     6000        0.262    0.000    1.080    0.000 pyCGM.py:1354(elbowJointCenter)
+   180000        0.268    0.000    0.993    0.000 defmatrix.py:115(__new__)
+   108000        0.053    0.000    0.960    0.000 <__array_function__ internals>:177(vstack)
+     6000        0.094    0.000    0.907    0.000 pyCGM.py:302(kneeJointCenter)
+    84000        0.889    0.000    0.889    0.000 pyCGM.py:2179(getangle)
+     6000        0.133    0.000    0.873    0.000 pyCGM.py:456(ankleJointCenter)
+     6000        0.075    0.000    0.816    0.000 pyCGM.py:1780(handJointCenter)
+   108000        0.095    0.000    0.781    0.000 shape_base.py:222(vstack)
+     6000        0.014    0.000    0.739    0.000 pyCGM.py:1171(findshoulderJC)
+   120000        0.111    0.000    0.719    0.000 defmatrix.py:215(__mul__)
+   186000        0.086    0.000    0.521    0.000 <__array_function__ internals>:177(dot)
+    60000        0.028    0.000    0.453    0.000 <__array_function__ internals>:177(norm)
+     6000        0.140    0.000    0.399    0.000 pyCGM.py:643(footJointCenter)
+   108000        0.043    0.000    0.385    0.000 <__array_function__ internals>:177(atleast_2d)
+    60000        0.205    0.000    0.378    0.000 linalg.py:2349(norm)
+   522000        0.275    0.000    0.313    0.000 pyCGM.py:2244(norm2d)
+   180000        0.299    0.000    0.299    0.000 {built-in method _warnings.warn}
+   108000        0.239    0.000    0.296    0.000 shape_base.py:81(atleast_2d)
+   108000        0.052    0.000    0.291    0.000 <__array_function__ internals>:177(concatenate)
+   120000        0.193    0.000    0.254    0.000 {built-in method __new__ of type object at 0x8fa300}
+     6000        0.022    0.000    0.231    0.000 pyCGM.py:2273(rotmat)
+   282000        0.230    0.000    0.230    0.000 pyCGM.py:2005(cross)
+    12000        0.219    0.000    0.225    0.000 pyCGM.py:2032(getHeadangle)
+   198000        0.224    0.000    0.224    0.000 {built-in method numpy.array}
+   210000        0.146    0.000    0.215    0.000 pyCGM.py:2250(norm3d)
+    24000        0.146    0.000    0.201    0.000 pyCGM.py:2265(matrixmult)
+    24000        0.016    0.000    0.200    0.000 <__array_function__ internals>:177(around)
+     6000        0.112    0.000    0.181    0.000 pyCGM.py:1236(shoulderAxisCalc)
+     6000        0.103    0.000    0.177    0.000 pyCGM.py:1641(wristJointCenter)
+    24000        0.011    0.000    0.169    0.000 fromnumeric.py:3257(around)
+    24000        0.019    0.000    0.158    0.000 fromnumeric.py:51(_wrapfunc)
+   360000        0.131    0.000    0.158    0.000 defmatrix.py:167(__array_finalize__)
+    60000        0.040    0.000    0.156    0.000 defmatrix.py:36(asmatrix)
+     6000        0.097    0.000    0.152    0.000 pyCGM.py:1004(thoraxJC)
+     6000        0.097    0.000    0.151    0.000 pyCGM.py:33(pelvisJointCenter)
+   372000        0.144    0.000    0.144    0.000 {built-in method numpy.asarray}
+    24000        0.030    0.000    0.136    0.000 fromnumeric.py:38(_wrapit)
+    12000        0.120    0.000    0.120    0.000 pyCGM.py:2083(getangle_sho)
+   180000        0.104    0.000    0.120    0.000 defmatrix.py:189(__getitem__)
+     6000        0.065    0.000    0.107    0.000 pyCGM.py:1098(findwandmarker)
+  1248000        0.104    0.000    0.104    0.000 {built-in method builtins.isinstance}
+     6000        0.079    0.000    0.101    0.000 pyCGM.py:133(hipJointCenter)
+    24000        0.095    0.000    0.095    0.000 {method 'round' of 'numpy.ndarray' objects}
+     6000        0.063    0.000    0.094    0.000 pyCGM.py:907(headJC)
+   108000        0.030    0.000    0.076    0.000 shape_base.py:218(_vhstack_dispatcher)
+   732000        0.058    0.000    0.058    0.000 {built-in method math.sqrt}
+    60000        0.034    0.000    0.056    0.000 {method 'transpose' of 'numpy.ndarray' objects}
+     6000        0.049    0.000    0.049    0.000 pyCGM.py:2133(getangle_spi)
+   108000        0.027    0.000    0.046    0.000 shape_base.py:207(_arrays_for_stack_dispatcher)
+    24000        0.027    0.000    0.041    0.000 pyCGM.py:2266(<listcomp>)
+   396000        0.036    0.000    0.036    0.000 {built-in method math.cos}
+   384000        0.032    0.000    0.032    0.000 {built-in method math.sin}
+   516001        0.028    0.000    0.028    0.000 {built-in method builtins.len}
+   186000        0.027    0.000    0.027    0.000 multiarray.py:736(dot)
+    60000        0.023    0.000    0.027    0.000 numeric.py:1859(isscalar)
+     6000        0.025    0.000    0.025    0.000 pyCGM.py:238(hipAxisCenter)
+   336000        0.025    0.000    0.025    0.000 {method 'append' of 'list' objects}
+   324000        0.023    0.000    0.023    0.000 {built-in method numpy.asanyarray}
+    60000        0.022    0.000    0.022    0.000 {method 'ravel' of 'numpy.ndarray' objects}
+   108000        0.019    0.000    0.019    0.000 {built-in method builtins.hasattr}
+    60000        0.012    0.000    0.018    0.000 linalg.py:116(isComplexType)
+   120000        0.014    0.000    0.014    0.000 {built-in method builtins.issubclass}
+    60000        0.012    0.000    0.012    0.000 {built-in method math.acos}
+   108000        0.011    0.000    0.011    0.000 multiarray.py:148(concatenate)
+   108000        0.010    0.000    0.010    0.000 shape_base.py:77(_atleast_2d_dispatcher)
+    60000        0.010    0.000    0.010    0.000 linalg.py:2345(_norm_dispatcher)
+    48000        0.006    0.000    0.006    0.000 {built-in method builtins.getattr}
+    24000        0.006    0.000    0.006    0.000 {built-in method math.pow}
+    42000        0.004    0.000    0.004    0.000 {built-in method math.radians}
+    24000        0.003    0.000    0.003    0.000 {built-in method math.degrees}
+    24000        0.003    0.000    0.003    0.000 fromnumeric.py:3253(_around_dispatcher)
+        1        0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
 
 
 

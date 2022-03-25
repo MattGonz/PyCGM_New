@@ -24,9 +24,9 @@ class Model_CustomPelvis(Model):
 
         pel_axis_stack = np.column_stack([x,y,z,o])
         pel_axis_matrix = pel_axis_stack.reshape(num_frames,4,3).transpose(0,2,1)
-        # [ xx xy xz xo ] = pel_axis_matrix[0]
-        # [ yx yy yz yo ] = pel_axis_matrix[1]
-        # [ zx zy zz zo ] = pel_axis_matrix[2]
+        # [ xx yx zx ox ] = [r/l]_eye_axis_matrix[0]
+        # [ xy yy zy oy ] = [r/l]_eye_axis_matrix[1]
+        # [ xz yz zz oz ] = [r/l]_eye_axis_matrix[2]
 
         return pel_axis_matrix
 
@@ -58,9 +58,9 @@ class Model_NewFunction(Model):
 
         r_eye_axis_matrix = r_eye_axis_stack.reshape(num_frames,4,3).transpose(0,2,1)
         l_eye_axis_matrix = l_eye_axis_stack.reshape(num_frames,4,3).transpose(0,2,1)
-        # [ xx xy xz xo ] = [r/l]_eye_axis_matrix[0]
-        # [ yx yy yz yo ] = [r/l]_eye_axis_matrix[1]
-        # [ zx zy zz zo ] = [r/l]_eye_axis_matrix[2]
+        # [ xx yx zx ox ] = [r/l]_eye_axis_matrix[0]
+        # [ xy yy zy oy ] = [r/l]_eye_axis_matrix[1]
+        # [ xz yz zz oz ] = [r/l]_eye_axis_matrix[2]
 
         return np.array([r_eye_axis_matrix, l_eye_axis_matrix])
 

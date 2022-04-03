@@ -9,7 +9,7 @@ from .new_io import frame_dtype, loadDataNew, loadVSK
 from .pycgmIO import loadData
 
 
-def structure_subject(static_trial_filename, dynamic_trials, measurement_filename):
+def structure_subject(static_trial_filename, dynamic_trials, measurement_filename, axis_result_keys, angle_result_keys):
     '''
     Create a structured array containing a subject's data
 
@@ -81,8 +81,11 @@ def structure_subject(static_trial_filename, dynamic_trials, measurement_filenam
     parsed_filenames = []
 
     for trial_name in dynamic_trials:
-        dynamic_trial = loadDataNew(trial_name)
+        dynamic_trial, num_frames = loadDataNew(trial_name, return_frame_count=True)
+
         marker_dtype = dynamic_trial.dtype
+        axes_dtype   = np.dtype([(key, 'f8', (num_frames, 3, 4)) for key in axis_result_keys])
+        angles_dtype = np.dtype([(key, 'f8', (num_frames, 3)) for key in angle_result_keys])
 
         # parse just the name of the trial
         filename = re.findall(r'[^\/]+(?=\.)', trial_name)[0]
@@ -90,7 +93,10 @@ def structure_subject(static_trial_filename, dynamic_trials, measurement_filenam
 
         marker_structs.append(dynamic_trial)
 
-        trial_dtype = [('markers', marker_dtype)]
+        trial_dtype = [('markers', marker_dtype),
+                       ('axes',    axes_dtype),
+                       ('angles',  angles_dtype)]
+
         dynamic_dtype.append((filename, trial_dtype))
 
 

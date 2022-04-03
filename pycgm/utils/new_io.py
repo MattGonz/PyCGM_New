@@ -11,7 +11,7 @@ def frame_dtype():
     return [('frame', 'f8'), ('point', point)]
 
 
-def loadDataNew(filename):
+def loadDataNew(filename, return_frame_count=False):
     """Loads motion capture data from a c3d file.
 
     Parameters
@@ -80,6 +80,9 @@ def loadDataNew(filename):
 
     end = time.time()
     print(f'Time to read/structure {filename}: {end - start}')
+
+    if return_frame_count:
+        return dynamic_struct, num_frames
     return dynamic_struct
 
 

@@ -11,8 +11,9 @@ from ..utils import subject_utils
 
 class ModelCreator():
     def __init__(self, static_filename, dynamic_filenames, measurement_filename):
-        self.data = subject_utils.structure_subject(static_filename, dynamic_filenames, measurement_filename)
-        self.trial_names = self.data.dynamic.dtype.names
+        self.static_filename = static_filename
+        self.dynamic_filenames = dynamic_filenames
+        self.measurement_filename = measurement_filename
 
         # Add non-overridden default dynamic funcs to funcs list
         self.axis_functions  = self.get_axis_functions()
@@ -30,9 +31,9 @@ class ModelCreator():
         #   self.angle_keys: ['Pelvis','RHip',   'LHip',   'RKnee', 'LKnee',  ...]
         self.axis_keys, self.angle_keys = self.update_return_keys()           
 
-        # Make empty structured arrays of returned axes and angles
-        self.axis_results  = self.make_axis_struct()
-        self.angle_results = self.make_angle_struct()
+        # Structure subject data
+        self.data = self.make_data_struct()
+        self.trial_names = self.data.dynamic.dtype.names
 
         # Get default parameter objects
         self.axis_func_parameter_names  = AxisFunctions().parameters()
@@ -41,6 +42,12 @@ class ModelCreator():
         # Expand required parameter names to their values in each trial's dataset
         self.axis_func_parameters, self.angle_func_parameters = self.update_trial_parameters()
 
+    def make_data_struct(self):
+        return subject_utils.structure_subject(self.static_filename,
+                                               self.dynamic_filenames,
+                                               self.measurement_filename,
+                                               self.axis_keys,
+                                               self.angle_keys)
 
     def get_axis_functions(self):
         """
@@ -129,66 +136,6 @@ class ModelCreator():
 
         return axis_keys, angle_keys
 
- 
-    def make_axis_struct(self):
-        """
-        Create a dictionary where each key is a trial name and each value
-        is a structured array of that trial's calculated axes.
-
-        Example of dtypes:
-        {'6000FrameTrial': [
-                            ('Pelvis', '<f8', (6000, 3, 4)),
-                            ('RHipJC', '<f8', (6000, 3, 4)), 
-                            ('LHipJC', '<f8', (6000, 3, 4)),
-                            ...
-                        ],
-         '59993FrameTrial': [
-                            ('Pelvis', '<f8', (59993, 3, 4)),
-                            ('RHipJC', '<f8', (59993, 3, 4)), 
-                            ('LHipJC', '<f8', (59993, 3, 4)),
-                            ...
-                        ],
-        }
-        """
-
-        axis_results = {}
-        for trial_name in self.trial_names:
-            num_frames = self.data.dynamic[trial_name].markers[0][0].shape[0]
-            axis_dtype = np.dtype([(key, 'f8', ((num_frames, 3, 4))) for key in self.axis_keys])
-            axis_results[trial_name] = np.zeros([], dtype=axis_dtype)
-
-        return axis_results
-
-
-    def make_angle_struct(self):
-        """
-        Create a dictionary where each key is a trial name and each value
-        is a structured array of that trial's calculated angles.
-
-        Example of dtypes:
-        {'6000FrameTrial': [
-                            ('Pelvis', '<f8', (6000, 3)),
-                            ('RHip',   '<f8', (6000, 3)), 
-                            ('LHip',   '<f8', (6000, 3)),
-                            ...
-                        ],
-         '59993FrameTrial': [
-                            ('Pelvis', '<f8', (59993, 3)),
-                            ('RHip',   '<f8', (59993, 3)), 
-                            ('LHip',   '<f8', (59993, 3)),
-                            ...
-                        ],
-        }
-        """
-
-        angle_results = {}
-        for trial_name in self.trial_names:
-            num_frames  = self.data.dynamic[trial_name].markers[0][0].shape[0]
-            angle_dtype = np.dtype([(key, 'f8', ((num_frames, 3))) for key in self.angle_keys])
-            angle_results[trial_name] = np.zeros([], dtype=angle_dtype)
-
-        return angle_results
-
 
     def names_to_values(self, function_parameters, trial_name):
         """Convert a list of function parameter objects to their values in each trial's dataset
@@ -246,12 +193,12 @@ class ModelCreator():
                     updated_parameters_list[function_index].append(new_parameter)
 
                 elif isinstance(parameter, Axis):
-                    # Add parameter from axis_results struct
-                    updated_parameters_list[function_index].append(self.axis_results[trial_name][parameter.name])
+                    # Add parameter from axes struct
+                    updated_parameters_list[function_index].append(self.data.dynamic[trial_name].axes[parameter.name][0])
 
                 elif isinstance(parameter, Angle):
-                    # Add parameter from angle_results struct
-                    updated_parameters_list[function_index].append(self.angle_results[trial_name][parameter.name])
+                    # Add parameter from angles struct
+                    updated_parameters_list[function_index].append(self.data.dynamic[trial_name].angles[parameter.name])
 
                 else:
                     # Parameter is a constant, append as is

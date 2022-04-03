@@ -16,7 +16,7 @@ class Model(ModelCreator):
     def run(self):
         """
         Run each trial in the model and insert output values into 
-        their respective axis_results and angle_results structs.
+        the model's data struct.
         """
 
         for trial_name in self.trial_names:
@@ -32,16 +32,16 @@ class Model(ModelCreator):
                 parameters = self.axis_func_parameters[trial_name][self.axis_execution_order[func.__name__]]
                 ret_axes = np.array(func(*parameters))
 
-                # Insert returned axes into the self.axis_results structured array
+                # Insert returned axes into the model structured array
                 if ret_axes.ndim == 4:
                     # Multiple axes returned by one function
                     for ret_axes_index, axis in enumerate(ret_axes):
-                        # Insert each axis into axis_results
-                        self.axis_results[trial_name][returned_axis_names[ret_axes_index]] = axis
+                        # Insert each axis into model
+                        self.data.dynamic[trial_name].axes[returned_axis_names[ret_axes_index]] = axis
 
                 else:
-                    # Insert returned axis into axis_results
-                    self.axis_results[trial_name][returned_axis_names[0]] = ret_axes
+                    # Insert returned axis into model
+                    self.data.dynamic[trial_name].axes[returned_axis_names[0]] = ret_axes
 
                 end = time.time()
 
@@ -59,86 +59,21 @@ class Model(ModelCreator):
                 parameters = self.angle_func_parameters[trial_name][self.angle_execution_order[func.__name__]]
                 ret_angles = np.array(func(*parameters))
 
-                # Insert returned angles into the self.angle_results structured array
+                # Insert returned angles into the model structured array
                 if ret_angles.ndim == 3:
                     # Multiple angles returned by one function
                     for ret_angles_index, angle in enumerate(ret_angles):
-                        # Insert each angle into angle_results
-                        self.angle_results[trial_name][returned_angle_names[ret_angles_index]] = angle
+                        # Insert each angle into model
+                        self.data.dynamic[trial_name].angles[returned_angle_names[ret_angles_index]] = angle
 
                 else:
-                    # Insert returned angle into angle_results
-                    self.angle_results[trial_name][returned_angle_names[0]] = ret_angles
+                    # Insert returned angle into model
+                    self.data.dynamic[trial_name].angles[returned_angle_names[0]] = ret_angles
 
                 end = time.time()
 
                 print(f"\t{trial_name:<20}\t{func.__name__:<25}\t{end-start:.5f}s")
 
-        start = time.time()
-        self.structure_model_output()
-        end = time.time()
-        print(f'\tTime to structure output:\t\t\t\t{end-start:.5f}s')
-
-
-    def structure_model_output(self):
-        """Recreates the original model structure, but with the model outputs inserted.
-
-        Notes
-        -----
-        Using model = Model():
-
-        Accessing measurement data:
-            model.data.static.measurements.{measurement name}
-            e.g. model.data.static.measurements.LeftLegLength
-
-        Accessing static trial data:
-            model.data.static.markers.{marker name}.point.{x, y, z}
-            e.g. model.data.static.markers.LASI.point.x
-
-        Accessing dynamic trial data:
-            Input markers:
-                model.data.dynamic.{filename}.markers.{marker name}.point.{x, y, z}
-                e.g. model.data.RoboWalk.markers.LASI.point.x
-            Output axes:
-                model.data.dynamic.{filename}.axes.{axis name}
-                e.g. model.data.RoboWalk.axes.Pelvis
-            Output angles:
-                model.data.dynamic.{filename}.angles.{angle name}
-                e.g. model.data.RoboWalk.angles.RHip
-        """
-
-        dynamic_dtype = []
-
-        for trial_name in self.trial_names:
-            axis_output_dtype   = self.axis_results[trial_name].dtype
-            angle_output_dtype  = self.angle_results[trial_name].dtype
-
-            marker_input_dtype = self.data.dynamic[trial_name].markers.dtype
-            
-            trial_dtype = [('markers', marker_input_dtype), \
-                           ('axes', axis_output_dtype),     \
-                           ('angles', angle_output_dtype)]
-
-            dynamic_dtype.append((trial_name, trial_dtype))
-
-
-        subject_dtype = [('static', [('markers', self.data.static.markers.dtype), \
-                                     ('measurements', self.data.static.measurements.dtype)]), \
-                         ('dynamic', dynamic_dtype)]
-
-        subject = np.zeros((1), dtype=subject_dtype)
-        subject['static']['markers']      = self.data.static.markers
-        subject['static']['measurements'] = self.data.static.measurements
-
-        for trial_name in self.trial_names:
-            subject['dynamic'][trial_name]['markers'] = self.data.dynamic[trial_name].markers
-            subject['dynamic'][trial_name]['axes']    = self.axis_results[trial_name]
-            subject['dynamic'][trial_name]['angles']  = self.angle_results[trial_name]
-
-        subject = subject.view(np.recarray)
-
-        self.data = subject
-            
 
     def get_markers(self, arr, names, points_only=True, debug=False):
         start = time.time()
@@ -438,9 +373,6 @@ class Model(ModelCreator):
             self.axis_func_parameter_names[self.axis_execution_order[function]] = params
             self.axis_function_to_return[function] = returns_axes
 
-            # Update structured axis array dtype
-            self.axis_results = self.make_axis_struct()
-
         if returns_angles is not None:
             # Add returned angles, update related attributes
 
@@ -469,8 +401,8 @@ class Model(ModelCreator):
             self.angle_func_parameter_names[self.angle_execution_order[function]] = params
             self.angle_function_to_return[function] = returns_angles
 
-            # Update structured angle array dtype
-            self.angle_results = self.make_angle_struct()
+        # Remake data struct with new return keys
+        self.data = self.make_data_struct()
 
         # Expand required parameter names to their values in each trial's dataset
         self.axis_func_parameters, self.angle_func_parameters = self.update_trial_parameters()

@@ -8,4 +8,4 @@
      | :---:                                    |      :---:      | :---: | 
      | Original ([cadop/master](https://github.com/cadop/pyCGM/))               |    `9.146s`   |[cprofile_RoboWalk_original.txt](https://github.com/MattGonz/PyCGM_Prototypes/blob/main/speed_tests/cprofile_RoboWalk_original.txt) |
      | Extensible (dev branch/extensible_api) |   `34.884s`   |[cprofile_RoboWalk_extensible.txt](https://github.com/MattGonz/PyCGM_Prototypes/blob/main/speed_tests/cprofile_RoboWalk_extensible.txt) |
-     | Vectorized / Extensible                |    `0.164s`   |[cprofile_RoboWalk_vectorized.txt](https://github.com/MattGonz/PyCGM_Prototypes/blob/main/speed_tests/cprofile_RoboWalk_vectorized.txt) |
+     | Vectorized / Extensible                |    `0.142s`   |[cprofile_RoboWalk_vectorized.txt](https://github.com/MattGonz/PyCGM_Prototypes/blob/main/speed_tests/cprofile_RoboWalk_vectorized.txt) |

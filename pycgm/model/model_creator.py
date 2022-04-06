@@ -43,11 +43,11 @@ class ModelCreator():
         self.axis_func_parameters, self.angle_func_parameters = self.update_trial_parameters()
 
     def make_data_struct(self):
-        return subject_utils.structure_subject(self.static_filename,
-                                               self.dynamic_filenames,
-                                               self.measurement_filename,
-                                               self.axis_keys,
-                                               self.angle_keys)
+        return subject_utils.structure_model(self.static_filename,
+                                             self.dynamic_filenames,
+                                             self.measurement_filename,
+                                             self.axis_keys,
+                                             self.angle_keys)
 
     def get_axis_functions(self):
         """

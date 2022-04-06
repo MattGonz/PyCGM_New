@@ -85,7 +85,7 @@ class Model(ModelCreator):
         if any(name not in arr[0].dtype.names for name in names):
             return None
 
-        rec = rfn.repack_fields(arr[names]).view(subject_utils.frame_dtype()).reshape(len(names), int(num_frames))
+        rec = rfn.repack_fields(arr[names]).view(subject_utils.marker_dtype()).reshape(len(names), int(num_frames))
 
 
         if points_only:

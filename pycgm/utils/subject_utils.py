@@ -5,49 +5,55 @@ import numpy as np
 from numpy.lib import recfunctions as rfn
 
 from ..calc import static
-from .new_io import frame_dtype, loadDataNew, loadVSK
+from .new_io import marker_dtype, load_c3d, loadVSK
 from .pycgmIO import loadData
 
 
-def structure_subject(static_trial_filename, dynamic_trials, measurement_filename, axis_result_keys, angle_result_keys):
-    '''
-    Create a structured array containing a subject's data
+def structure_model(static_trial_filename, dynamic_trials, measurement_filename, axis_result_keys, angle_result_keys):
+    '''Create a structured array containing a model's data
 
     Parameters
     ----------
-    static_trial_filename: str
+    static_trial_filename : str
         Filename of the static trial .c3d
 
-    dynamic_trials: str or list of str
+    dynamic_trials : str or list of str
         Filename or list of filenames of dynamic trial .c3d(s)
 
-    measurement_filename: str
+    measurement_filename : str
         Filename of the subject measurement .vsk
+
+    axis_result_keys : list of str
+        A list containing the names of the model's returned axes
+
+    angle_result_keys : list of str
+        A list containing the names of the model's returned angles
 
     Returns
     -------
-    subject: structured array
-        structured array containing the subject's measurements, static trial,
+    model : structured array
+        Structured array containing the model's measurements, static trial,
         and dynamic trial(s)
 
     Notes
     -----
     Accessing measurement data:
-        subject.static.measurements.{measurement name}
-        e.g. subject.static.measurements.LeftLegLength
+        model.static.measurements.{measurement name}
+        e.g. model.static.measurements.LeftLegLength
 
     Accessing static trial data:
-        subject.static.markers.{marker name}.point.{x, y, z}
-        e.g. subject.static.markers.LASI.point.x
+        model.static.markers.{marker name}.point.{x, y, z}
+        e.g. model.static.markers.LASI.point.x
 
     Accessing dynamic trial data:
-        subject.dynamic.{filename}.markers.{marker name}.point.{x, y, z}
-        e.g. subject.RoboWalk.markers.LASI.point.x
+        model.dynamic.{filename}.markers.{marker name}.point.{x, y, z}
+        e.g. model.RoboWalk.markers.LASI.point.x
+        e.g. model.RoboWalk.axes.Pelvis
+        e.g. model.RoboWalk.angles.RHip
     '''
 
     def structure_measurements(measurements):
         sm_names = measurements[0]
-        sm_dtype = np.dtype([(key, 'f8') for key in sm_names])
         sm_dtype = []
         for key in sm_names:
             if key == "GCS":
@@ -74,14 +80,14 @@ def structure_subject(static_trial_filename, dynamic_trials, measurement_filenam
     calibrated_measurements_split = [list(calibrated_measurements_dict.keys()), list(calibrated_measurements_dict.values())]
 
     measurements_struct = structure_measurements(calibrated_measurements_split)
-    static_trial = loadDataNew(static_trial_filename)
+    static_trial = load_c3d(static_trial_filename)
 
     dynamic_dtype = []
     marker_structs = []
     parsed_filenames = []
 
     for trial_name in dynamic_trials:
-        dynamic_trial, num_frames = loadDataNew(trial_name, return_frame_count=True)
+        dynamic_trial, num_frames = load_c3d(trial_name, return_frame_count=True)
 
         marker_dtype = dynamic_trial.dtype
         axes_dtype   = np.dtype([(key, 'f8', (num_frames, 3, 4)) for key in axis_result_keys])
@@ -100,23 +106,23 @@ def structure_subject(static_trial_filename, dynamic_trials, measurement_filenam
         dynamic_dtype.append((filename, trial_dtype))
 
 
-    subject_dtype = [('static', [('markers', static_trial.dtype), \
-                                 ('measurements', measurements_struct.dtype)]), \
-                     ('dynamic', dynamic_dtype)]
+    model_dtype = [('static', [('markers', static_trial.dtype), \
+                               ('measurements', measurements_struct.dtype)]), \
+                   ('dynamic', dynamic_dtype)]
 
-    subject = np.zeros((1), dtype=subject_dtype)
-    subject['static']['markers'] = static_trial
-    subject['static']['measurements'] = measurements_struct
+    model = np.zeros((1), dtype=model_dtype)
+    model['static']['markers'] = static_trial
+    model['static']['measurements'] = measurements_struct
 
     for i, trial_name in enumerate(parsed_filenames):
-        subject['dynamic'][trial_name]['markers'] = marker_structs[i]
+        model['dynamic'][trial_name]['markers'] = marker_structs[i]
 
-    subject = subject.view(np.recarray)
+    model = model.view(np.recarray)
 
     end = time.time()
-    print(f'Total time to load and structure subject: {end-start}\n')
+    print(f'Total time to load and structure model: {end-start}\n')
 
-    return subject
+    return model
 
 
 def get_markers(arr, names, points_only=True, debug=False):
@@ -126,7 +132,7 @@ def get_markers(arr, names, points_only=True, debug=False):
         names = [names]
     num_frames = arr[0][0].shape[0]
 
-    rec = rfn.repack_fields(arr[names]).view(frame_dtype()).reshape(len(names), int(num_frames))
+    rec = rfn.repack_fields(arr[names]).view(marker_dtype()).reshape(len(names), int(num_frames))
 
 
     if points_only:
@@ -177,9 +183,9 @@ def add_virtual_marker(dynamic_trial, name, marker_data):
 
     marker_positions = np.empty((num_markers, num_frames), dtype=(("4f8")))
     marker_positions[:] = trial_uns
-    marker_positions.dtype = frame_dtype()
+    marker_positions.dtype = marker_dtype()
 
-    marker_xyz = [(key, (frame_dtype(), (num_frames,))) for key in dtype_names]
+    marker_xyz = [(key, (marker_dtype(), (num_frames,))) for key in dtype_names]
     dynamic_struct = np.empty((1), dtype=marker_xyz)
 
     for i, key in enumerate(dtype_names):
